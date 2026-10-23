@@ -15,10 +15,16 @@ The audio screen exposes:
 - TeamTalk receive playout/de-jitter buffer
 - microphone transmission toggle
 
+The app is self-contained: the native TeamTalk header and archive are in
+`Vendor/TeamTalkSDK/`. It does not require the parent TeamTalk checkout at
+build time.
+
 Build from this directory with:
 
 ```sh
 xcodebuild -project TTCustom.xcodeproj -scheme "TT Custom" -sdk iphoneos -configuration Debug build
 ```
 
-The TeamTalk SDK license values remain in `iTeamTalk/License.swift`; they are intentionally blank in this checkout. A valid TeamTalk SDK license is required for redistribution of an app embedding the SDK.
+The TeamTalk SDK license values remain in `iTeamTalk/License.swift`; they are
+intentionally blank in this checkout. See `README-SDK.md` for the bundled SDK
+contents and licensing note.

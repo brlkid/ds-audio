@@ -1,4 +1,4 @@
-#include "../../../../../../Library/TeamTalk_DLL/TeamTalk.h"
+#include "../../../../Vendor/TeamTalkSDK/TeamTalk.h"
 
 typedef enum {
     TTKitUserStringNickname,
