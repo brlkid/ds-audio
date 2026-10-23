@@ -1,6 +1,6 @@
 # Building the iOS / macOS XCFrameworks for TeamTalkKit
 
-The Swift package `Client/iTeamTalk/TeamTalkKit` links the native TeamTalk
+The Swift package `apps/tt-custom-ios/TeamTalkKit` links the native TeamTalk
 client library through two binary targets declared in its `Package.swift`:
 
 | Binary target            | File (relative to the package)               |
@@ -87,7 +87,7 @@ library-only.
 
 ```sh
 DLL="$TEAMTALK_ROOT/Library/TeamTalk_DLL"
-VENDOR="$TEAMTALK_ROOT/Client/iTeamTalk/TeamTalkKit/Vendor"
+VENDOR="$TEAMTALK_ROOT/apps/tt-custom-ios/TeamTalkKit/Vendor"
 
 # iOS: one device slice + one simulator slice
 rm -rf "$VENDOR/TeamTalkNativeiOS.xcframework"
@@ -115,7 +115,7 @@ lipo -info "$VENDOR/TeamTalkNativeiOS.xcframework"/ios-arm64/libTeamTalk5-arm64.
 lipo -info "$VENDOR/TeamTalkNativeiOS.xcframework"/ios-arm64_x86_64-simulator/libTeamTalk5-simulator.a
 
 # package resolves and builds against the device slice
-cd "$TEAMTALK_ROOT/Client/iTeamTalk/TeamTalkKit"
+cd "$TEAMTALK_ROOT/apps/tt-custom-ios/TeamTalkKit"
 swift build -Xswiftc -sdk -Xswiftc "$(xcrun --sdk iphoneos --show-sdk-path)" \
             -Xswiftc -target -Xswiftc arm64-apple-ios18.0
 ```

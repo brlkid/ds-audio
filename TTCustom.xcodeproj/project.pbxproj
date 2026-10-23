@@ -34,10 +34,6 @@
 		9A000001000000000000001B /* TTCustomRouteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A000001000000000000001C /* TTCustomRouteController.swift */; };
 		9A000001000000000000001D /* TTCustomCallCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A000001000000000000001E /* TTCustomCallCoordinator.swift */; };
 		9A000001000000000000001F /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000020 /* CallKit.framework */; };
-		9B0000010000000000000001 /* TTCustomReplayKitBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000002 /* TTCustomReplayKitBridge.swift */; };
-		9B0000010000000000000003 /* BroadcastSampleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000004 /* BroadcastSampleHandler.swift */; };
-		9B0000010000000000000005 /* BroadcastInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000006 /* BroadcastInfo.plist */; };
-		9B0000010000000000000007 /* ReplayKitAudio.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000008 /* ReplayKitAudio.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,7 +79,7 @@
 		254B7A711B99E67400BE0DEF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		254B7A751B99E68800BE0DEF /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
 		254B7A781B99E69200BE0DEF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		254B7A7A1B99E77000BE0DEF /* libTeamTalk5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libTeamTalk5.a; path = ../Library/TeamTalk_DLL/libTeamTalk5.a; sourceTree = "<group>"; };
+		254B7A7A1B99E77000BE0DEF /* libTeamTalk5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libTeamTalk5.a; path = ../../Library/TeamTalk_DLL/libTeamTalk5.a; sourceTree = "<group>"; };
 		254BE12324DED8F300244D0C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		254BE12424DED8F500244D0C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		254C08491C345E3700C98566 /* newuser.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = newuser.mp3; sourceTree = "<group>"; };
@@ -129,10 +125,6 @@
 		9A000001000000000000001C /* TTCustomRouteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomRouteController.swift; sourceTree = "<group>"; };
 		9A000001000000000000001E /* TTCustomCallCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomCallCoordinator.swift; sourceTree = "<group>"; };
 		9A0000010000000000000020 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
-		9B0000010000000000000002 /* TTCustomReplayKitBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomReplayKitBridge.swift; sourceTree = "<group>"; };
-		9B0000010000000000000004 /* BroadcastSampleHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastSampleHandler.swift; sourceTree = "<group>"; };
-		9B0000010000000000000006 /* BroadcastInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9B0000010000000000000008 /* ReplayKitAudio.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ReplayKitAudio.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4F4B78C0EB54A24B439A96D /* iTeamTalkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iTeamTalkApp.swift; sourceTree = "<group>"; };
 		CC0002000000000000000001 /* AudioCodecModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCodecModel.swift; sourceTree = "<group>"; };
 		CC0002000000000000000002 /* ChannelDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelDetailModel.swift; sourceTree = "<group>"; };
@@ -184,13 +176,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9B0000010000000000000009 /* ReplayKit Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -204,7 +189,6 @@
 				254B7A711B99E67400BE0DEF /* AVFoundation.framework */,
 				9A0000010000000000000020 /* CallKit.framework */,
 				254B7A491B98BAA300BE0DEF /* iTeamTalk */,
-				9B0000010000000000000010 /* ReplayKitAudio */,
 				254B7A5F1B98BAA400BE0DEF /* iTeamTalkTests */,
 				254B7A481B98BAA300BE0DEF /* Products */,
 				25DE1FBD1FADAAC700EA77D6 /* Frameworks */,
@@ -216,7 +200,6 @@
 			children = (
 				254B7A471B98BAA300BE0DEF /* TT Custom.app */,
 				254B7A5C1B98BAA400BE0DEF /* iTeamTalkTests.xctest */,
-				9B0000010000000000000008 /* ReplayKitAudio.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -241,7 +224,6 @@
 				9A000001000000000000001A /* TTCustomAudioController.swift */,
 				9A000001000000000000001C /* TTCustomRouteController.swift */,
 				9A000001000000000000001E /* TTCustomCallCoordinator.swift */,
-				9B0000010000000000000002 /* TTCustomReplayKitBridge.swift */,
 				254B7A6E1B98C89600BE0DEF /* AppInfo.swift */,
 				25DD929E1BB2FA0E00779988 /* Common.swift */,
 				25DF9A011C5E00E100469BA8 /* License.swift */,
@@ -258,15 +240,6 @@
 				254B7A4A1B98BAA300BE0DEF /* Supporting Files */,
 			);
 			path = iTeamTalk;
-			sourceTree = "<group>";
-		};
-		9B0000010000000000000010 /* ReplayKitAudio */ = {
-			isa = PBXGroup;
-			children = (
-				9B0000010000000000000004 /* BroadcastSampleHandler.swift */,
-				9B0000010000000000000006 /* BroadcastInfo.plist */,
-			);
-			path = ReplayKitAudio;
 			sourceTree = "<group>";
 		};
 		254B7A4A1B98BAA300BE0DEF /* Supporting Files */ = {
@@ -372,7 +345,6 @@
 				254B7A431B98BAA300BE0DEF /* Sources */,
 				254B7A441B98BAA300BE0DEF /* Frameworks */,
 				254B7A451B98BAA300BE0DEF /* Resources */,
-				9B000001000000000000000A /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
@@ -403,23 +375,6 @@
 			productName = iTeamTalkTests;
 			productReference = 254B7A5C1B98BAA400BE0DEF /* iTeamTalkTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		9B000001000000000000000D /* ReplayKitAudio */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 9B000001000000000000000E /* Build configuration list for ReplayKitAudio */;
-			buildPhases = (
-				9B000001000000000000000C /* ReplayKit Sources */,
-				9B0000010000000000000009 /* ReplayKit Frameworks */,
-				9B000001000000000000000B /* ReplayKit Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = ReplayKitAudio;
-			productName = ReplayKitAudio;
-			productReference = 9B0000010000000000000008 /* ReplayKitAudio.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -485,7 +440,6 @@
 			targets = (
 				254B7A461B98BAA300BE0DEF /* TT Custom */,
 				254B7A5B1B98BAA400BE0DEF /* iTeamTalkTests */,
-				9B000001000000000000000D /* ReplayKitAudio */,
 			);
 		};
 /* End PBXProject section */
@@ -501,24 +455,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		254B7A5A1B98BAA400BE0DEF /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9B000001000000000000000A /* Embed App Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				9B0000010000000000000007 /* ReplayKitAudio.appex in Embed App Extensions */,
-			);
-			name = "Embed App Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9B000001000000000000000B /* ReplayKit Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -549,7 +485,6 @@
 				9A0000010000000000000019 /* TTCustomAudioController.swift in Sources */,
 				9A000001000000000000001B /* TTCustomRouteController.swift in Sources */,
 				9A000001000000000000001D /* TTCustomCallCoordinator.swift in Sources */,
-				9B0000010000000000000001 /* TTCustomReplayKitBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,14 +493,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				254B7A631B98BAA400BE0DEF /* iTeamTalkTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9B000001000000000000000C /* ReplayKit Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				9B0000010000000000000003 /* BroadcastSampleHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -765,7 +692,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					../Library/TeamTalk_DLL/,
+					../../Library/TeamTalk_DLL/,
 				);
 				MARKETING_VERSION = 5.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom;
@@ -797,7 +724,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					../Library/TeamTalk_DLL/,
+					../../Library/TeamTalk_DLL/,
 				);
 				MARKETING_VERSION = 5.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom;
@@ -849,50 +776,9 @@
 			};
 			name = Release;
 		};
-		9B000001000000000000000F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = 32VDVGCH4Y;
-				INFOPLIST_FILE = ReplayKitAudio/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 5.23;
-				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom.broadcast;
-				PRODUCT_NAME = "TT Audio";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		9B0000010000000000000011 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = 32VDVGCH4Y;
-				INFOPLIST_FILE = ReplayKitAudio/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 5.23;
-				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom.broadcast;
-				PRODUCT_NAME = "TT Audio";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9B000001000000000000000E /* Build configuration list for ReplayKitAudio */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				9B000001000000000000000F /* Debug */,
-				9B0000010000000000000011 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		254B7A421B98BAA300BE0DEF /* Build configuration list for PBXProject "TTCustom" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

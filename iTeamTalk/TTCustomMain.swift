@@ -103,7 +103,6 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     var audioMixer: TTCustomAudioMixer?
     var appleAudioPipeline: TTCustomAppleAudioPipeline?
     var systemAudioCapture: AnyObject?
-    var replayKitBridge: TTCustomReplayKitBridge?
     var audioStatsTimer: Timer?
     var routeReconfigureWorkItem: DispatchWorkItem?
     var lastDiagnosticsPing = Date.distantPast
