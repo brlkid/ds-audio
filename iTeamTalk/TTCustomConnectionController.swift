@@ -282,11 +282,20 @@ func connect() {
                 channelActionStatus = "Joined \(joinedChannelName)"
                 connectionLifecycle.markJoined()
                 refreshChannelAudio()
-                configureAudio()
                 if systemCallControlsEnabled {
                     let channel = client.withChannel(id: client.myChannelID) { $0 }
                     let name = TeamTalkString.channel(.name, from: channel)
-                    callCoordinator.begin(channelName: name.isEmpty ? "TeamTalk channel" : name)
+                    callCoordinator.begin(
+                        channelName: name.isEmpty ? "TeamTalk channel" : name,
+                        onAudioActivated: { [weak self] in
+                            Task { @MainActor in self?.configureAudio() }
+                        },
+                        onFailure: { [weak self] in
+                            Task { @MainActor in self?.configureAudio() }
+                        }
+                    )
+                } else {
+                    configureAudio()
                 }
                 return
             }

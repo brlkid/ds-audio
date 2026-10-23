@@ -291,7 +291,32 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     func setSystemCallControlsEnabled(_ enabled: Bool) {
         systemCallControlsEnabled = enabled
         UserDefaults.standard.set(enabled, forKey: "ttcustom.systemCallControls")
-        if !enabled { callCoordinator.endFromApp() }
+        if enabled, connected, !callCoordinator.isActive {
+            client.enableVoiceTransmission(false)
+            client.closeSoundDuplexDevices()
+            client.closeSoundDevices()
+            deactivateAudioSession()
+            audioConfigured = false
+            let channel = client.withChannel(id: client.myChannelID) { $0 }
+            let name = TeamTalkString.channel(.name, from: channel)
+            callCoordinator.begin(
+                channelName: name.isEmpty ? "TeamTalk channel" : name,
+                onAudioActivated: { [weak self] in
+                    Task { @MainActor in self?.configureAudio() }
+                },
+                onFailure: { [weak self] in
+                    Task { @MainActor in self?.configureAudio() }
+                }
+            )
+        } else if !enabled {
+            callCoordinator.endFromApp()
+            if connected {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                    guard let self, self.connected else { return }
+                    self.configureAudio()
+                }
+            }
+        }
     }
 
     func joinChannelFromBrowser(_ channel: Channel, password: String = "") {

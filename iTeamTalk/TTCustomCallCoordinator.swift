@@ -10,6 +10,8 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
     private let callController = CXCallController()
     private var callUUID: UUID?
     private var endingFromApp = false
+    private var audioActivationHandler: (() -> Void)?
+    private var activationTimeout: DispatchWorkItem?
 
     init(session: TTCustomSession) {
         self.session = session
@@ -26,8 +28,13 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
 
     var isActive: Bool { callUUID != nil }
 
-    func begin(channelName: String) {
+    func begin(
+        channelName: String,
+        onAudioActivated: @escaping () -> Void,
+        onFailure: @escaping () -> Void
+    ) {
         guard callUUID == nil else { return }
+        audioActivationHandler = onAudioActivated
         let uuid = UUID()
         callUUID = uuid
         let action = CXStartCallAction(
@@ -39,21 +46,25 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
                 guard let self else { return }
                 if let error {
                     self.callUUID = nil
+                    self.audioActivationHandler = nil
                     if let session = self.session {
                         Task { @MainActor in
                             session.status = "Native call controls unavailable: \(error.localizedDescription)"
                         }
                     }
+                    onFailure()
                     return
                 }
                 self.provider.reportOutgoingCall(with: uuid, startedConnectingAt: Date())
-                self.provider.reportOutgoingCall(with: uuid, connectedAt: Date())
             }
         }
     }
 
     func endFromApp() {
         guard let uuid = callUUID else { return }
+        activationTimeout?.cancel()
+        activationTimeout = nil
+        audioActivationHandler = nil
         endingFromApp = true
         let action = CXEndCallAction(call: uuid)
         callController.request(CXTransaction(action: action)) { [weak self] error in
@@ -69,6 +80,9 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
     }
 
     func providerDidReset(_ provider: CXProvider) {
+        activationTimeout?.cancel()
+        activationTimeout = nil
+        audioActivationHandler = nil
         callUUID = nil
         endingFromApp = false
     }
@@ -95,12 +109,16 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
     }
 
     func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
-        // Do not rebuild the TeamTalk graph here. It is already configured
-        // before the call is announced, avoiding route and VoiceOver churn.
+        guard let uuid = callUUID else { return }
+        let handler = audioActivationHandler
+        audioActivationHandler = nil
+        provider.reportOutgoingCall(with: uuid, connectedAt: Date())
+        handler?()
     }
 
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
-        // Normal TeamTalk teardown remains the source of truth.
+        activationTimeout?.cancel()
+        activationTimeout = nil
     }
 
     func provider(_ provider: CXProvider, timedOutPerforming action: CXAction) {
