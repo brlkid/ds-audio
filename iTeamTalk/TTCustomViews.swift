@@ -247,6 +247,38 @@ struct TTCustomAudioControlsTab: View {
                     }
                 }
 
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("Channel recording", systemImage: session.isRecordingChannel ? "record.circle.fill" : "record.circle")
+                            .font(.headline)
+                        Button {
+                            session.toggleChannelRecording()
+                        } label: {
+                            Label(
+                                session.isRecordingChannel ? "Stop recording" : "Start recording",
+                                systemImage: session.isRecordingChannel ? "stop.circle.fill" : "record.circle.fill"
+                            )
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(session.isRecordingChannel ? .red : .accentColor)
+                        .accessibilityHint(session.isRecordingChannel ? "Save the current channel recording" : "Record the current TeamTalk channel")
+
+                        if !session.channelRecordingStatus.isEmpty {
+                            Text(session.channelRecordingStatus)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        if let recordingURL = session.channelRecordingURL, !session.isRecordingChannel {
+                            ShareLink(item: recordingURL) {
+                                Label("Share recording", systemImage: "square.and.arrow.up")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
+
                 TTCustomDevicesControls(session: session)
 
                 GroupBox {

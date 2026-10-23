@@ -387,6 +387,25 @@ public final class TeamTalkClient: @unchecked Sendable {
         withNative { TT_DoRemoveChannel($0, channelID) }
     }
 
+    /// Starts a local recording of one TeamTalk channel. The SDK writes the
+    /// mixed voice conversation directly to the supplied file URL.
+    @discardableResult
+    public func startChannelRecording(channelID: Int32, fileURL: URL) -> Bool {
+        withNative { instance in
+            TT_StartRecordingMuxedAudioFileEx(
+                instance,
+                channelID,
+                fileURL.path,
+                AFF_WAVE_FORMAT
+            ) != 0
+        }
+    }
+
+    @discardableResult
+    public func stopChannelRecording(channelID: Int32) -> Bool {
+        withNative { TT_StopRecordingMuxedAudioFileEx($0, channelID) != 0 }
+    }
+
     @discardableResult
     public func changeNickname(_ nickname: String) -> Int32 {
         withNative { TT_DoChangeNickname($0, nickname) }

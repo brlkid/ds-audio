@@ -82,6 +82,9 @@ func connect() {
             self.appleAudioPipeline = nil
             self.client.closeSoundDuplexDevices()
             self.client.closeSoundDevices()
+            if self.isRecordingChannel {
+                self.stopChannelRecording()
+            }
             self.client.disconnect()
             self.connectionLifecycle.reset()
             self.speakerRouteWorkItem?.cancel()

@@ -48,6 +48,9 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     @Published var systemCallControlsEnabled = UserDefaults.standard.object(forKey: "ttcustom.systemCallControls") as? Bool ?? false
     @Published var sharingSystemAudio = false
     @Published var systemAudioMuted = false
+    @Published var isRecordingChannel = false
+    @Published var channelRecordingURL: URL?
+    @Published var channelRecordingStatus = ""
     @Published var micGain: Double = UserDefaults.standard.object(forKey: "ttcustom.micGain") as? Double ?? 1.0
     @Published var systemAudioGain: Double = UserDefaults.standard.object(forKey: "ttcustom.systemAudioGain") as? Double ?? 1.0
     @Published var masterTransmitGain: Double = UserDefaults.standard.object(forKey: "ttcustom.masterTransmitGain") as? Double ?? 1.0
@@ -171,6 +174,53 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
         remoteUsers[index].volume = volume
         UserDefaults.standard.set(volume, forKey: userVolumeKey(for: user.accountName))
         client.setUserVolume(userID: userID, stream: STREAMTYPE_VOICE, volume: Int32(ttCustomReferenceVolume(volume)))
+    }
+
+    func toggleChannelRecording() {
+        if isRecordingChannel {
+            stopChannelRecording()
+        } else {
+            startChannelRecording()
+        }
+    }
+
+    private func startChannelRecording() {
+        let channelID = client.myChannelID
+        guard channelID > 0 else {
+            channelRecordingStatus = "Join a channel before recording"
+            return
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        let filename = "TT-Custom-\(formatter.string(from: Date())).wav"
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(filename)
+
+        guard client.startChannelRecording(channelID: channelID, fileURL: url) else {
+            channelRecordingStatus = "Could not start recording"
+            return
+        }
+
+        channelRecordingURL = url
+        isRecordingChannel = true
+        channelRecordingStatus = "Recording channel audio"
+    }
+
+    func stopChannelRecording() {
+        let channelID = client.myChannelID
+        guard channelID > 0 else {
+            isRecordingChannel = false
+            return
+        }
+
+        guard client.stopChannelRecording(channelID: channelID) else {
+            channelRecordingStatus = "Could not stop recording"
+            return
+        }
+
+        isRecordingChannel = false
+        channelRecordingStatus = channelRecordingURL.map { "Saved \($0.lastPathComponent)" } ?? "Recording saved"
     }
 
     func addRemoteUser(_ user: User) {
