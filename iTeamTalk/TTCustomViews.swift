@@ -57,10 +57,19 @@ struct TTCustomAudioView: View {
     var body: some View {
         TabView {
             TTCustomMainAudioTab(session: session)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    TTCustomSessionControlsBar(session: session)
+                }
                 .tabItem { Label("Channel", systemImage: "person.2.fill") }
             TTCustomAudioControlsTab(session: session)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    TTCustomSessionControlsBar(session: session)
+                }
                 .tabItem { Label("Audio", systemImage: "slider.vertical.3") }
             TTCustomNetworkTab(session: session)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    TTCustomSessionControlsBar(session: session)
+                }
                 .tabItem { Label("Network", systemImage: "network") }
         }
         .navigationTitle("TT Custom")
@@ -79,6 +88,55 @@ struct TTCustomAudioView: View {
             TTCustomSettingsPane(session: session)
         }
         .onAppear { session.refreshRoutes() }
+    }
+}
+
+private struct TTCustomSessionControlsBar: View {
+    @ObservedObject var session: TTCustomSession
+
+    var body: some View {
+        HStack(spacing: 12) {
+            TTCustomAudioSourceButton(
+                title: session.transmitting ? "Speaking" : "Muted",
+                systemImage: session.transmitting ? "mic.fill" : "mic.slash.fill",
+                isActive: session.transmitting
+            ) {
+                session.setTransmit(!session.transmitting)
+            }
+            .accessibilityLabel(session.transmitting ? "Microphone speaking" : "Microphone muted")
+            .accessibilityHint("Double tap to \(session.transmitting ? "mute" : "unmute") the microphone")
+
+            TTCustomAudioSourceButton(
+                title: session.sharingSystemAudio
+                    ? (session.systemAudioMuted ? "Audio muted" : "Audio on")
+                    : "Share audio",
+                systemImage: session.systemAudioMuted ? "speaker.slash.fill" : "waveform",
+                isActive: session.sharingSystemAudio && !session.systemAudioMuted
+            ) {
+                if session.sharingSystemAudio {
+                    session.setSystemAudioMuted(!session.systemAudioMuted)
+                } else {
+                    session.startSystemAudioSharing()
+                }
+            }
+            .accessibilityLabel(
+                session.sharingSystemAudio
+                    ? (session.systemAudioMuted ? "System audio muted" : "System audio enabled")
+                    : "Share system audio"
+            )
+            .accessibilityHint(
+                session.sharingSystemAudio
+                    ? "Double tap to \(session.systemAudioMuted ? "unmute" : "mute") system audio"
+                    : "Double tap to choose an app or display for system audio"
+            )
+        }
+        .padding(.horizontal)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .background(.bar)
+        .overlay(alignment: .top) {
+            Divider()
+        }
     }
 }
 
@@ -317,52 +375,6 @@ struct TTCustomMainAudioTab: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Voice", systemImage: "mic.fill")
-                            .font(.headline)
-                        VStack(alignment: .leading, spacing: 12) {
-                            TTCustomAudioSourceButton(
-                                title: session.transmitting ? "Speaking" : "Mic muted",
-                                systemImage: session.transmitting ? "mic.fill" : "mic.slash.fill",
-                                isActive: session.transmitting
-                            ) {
-                                session.setTransmit(!session.transmitting)
-                            }
-                            .accessibilityLabel(session.transmitting ? "Microphone speaking" : "Microphone muted")
-                            .accessibilityHint("Double tap to \(session.transmitting ? "mute" : "unmute") the microphone")
-
-                            TTCustomAudioSourceButton(
-                                title: session.sharingSystemAudio
-                                    ? (session.systemAudioMuted ? "System muted" : "System audio on")
-                                    : "Share system audio",
-                                systemImage: session.systemAudioMuted ? "speaker.slash.fill" : "waveform",
-                                isActive: session.sharingSystemAudio && !session.systemAudioMuted
-                            ) {
-                                if session.sharingSystemAudio {
-                                    session.setSystemAudioMuted(!session.systemAudioMuted)
-                                } else {
-                                    session.startSystemAudioSharing()
-                                }
-                            }
-                            .accessibilityLabel(
-                                session.sharingSystemAudio
-                                    ? (session.systemAudioMuted ? "System audio muted" : "System audio enabled")
-                                    : "Share system audio"
-                            )
-                            .accessibilityHint(
-                                session.sharingSystemAudio
-                                    ? "Double tap to \(session.systemAudioMuted ? "unmute" : "mute") system audio"
-                                    : "Double tap to choose an app or display for system audio"
-                            )
-                        }
-
-                        Text(session.status)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
                 TTCustomConnectionStabilityCard(session: session)
 
                 Picker("Channel view", selection: $selectedSection) {
