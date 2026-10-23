@@ -1,7 +1,9 @@
 import AVFoundation
 import Foundation
+import OSLog
 
 final class TTCustomAudioMixer {
+    private let logger = Logger(subsystem: "com.derrick.ttcustom", category: "mixer")
     private let queue = DispatchQueue(label: "com.derrick.ttcustom.audio-mixer", qos: .userInitiated)
     private let client: TTCustomAudioOutput
     private let engine = AVAudioEngine()
@@ -40,6 +42,13 @@ final class TTCustomAudioMixer {
     private var systemRecoveryEvents = 0
     private var micWasUnderrunning = false
     private var systemWasUnderrunning = false
+    private var micAppendBlocks = 0
+    private var systemAppendBlocks = 0
+
+    private func trace(_ message: String) {
+        logger.info("\(message, privacy: .public)")
+        print("[TTMixer] \(message)")
+    }
 
     init(client: TTCustomAudioOutput) {
         self.client = client
@@ -60,6 +69,7 @@ final class TTCustomAudioMixer {
         self.compressorEnabled = compressorEnabled
         self.limiterEnabled = limiterEnabled
         automaticGain.reset()
+        trace("mixer start: micEnabled=\(micEnabled), systemEnabled=\(systemEnabled), engineMic=\(useEngineMicrophone)")
         if useEngineMicrophone {
             let input = engine.inputNode
             input.removeTap(onBus: 0)
@@ -84,6 +94,8 @@ final class TTCustomAudioMixer {
             systemRecoveryEvents = 0
             micWasUnderrunning = false
             systemWasUnderrunning = false
+            micAppendBlocks = 0
+            systemAppendBlocks = 0
             schedulerRunning = true
             startScheduler()
         }
@@ -132,11 +144,25 @@ final class TTCustomAudioMixer {
     }
 
     func appendSystemAudio(_ samples: [Int16]) {
-        queue.async { [weak self] in self?.systemSamples.append(samples) }
+        queue.async { [weak self] in
+            guard let self else { return }
+            self.systemAppendBlocks += 1
+            self.systemSamples.append(samples)
+            if self.systemAppendBlocks == 1 || self.systemAppendBlocks % 100 == 0 {
+                self.trace("system append #\(self.systemAppendBlocks): \(samples.count) samples, queue=\(self.systemSamples.count)")
+            }
+        }
     }
 
     func appendMicrophoneAudio(_ samples: [Int16]) {
-        queue.async { [weak self] in self?.micSamples.append(samples) }
+        queue.async { [weak self] in
+            guard let self else { return }
+            self.micAppendBlocks += 1
+            self.micSamples.append(samples)
+            if self.micAppendBlocks == 1 || self.micAppendBlocks % 100 == 0 {
+                self.trace("microphone append #\(self.micAppendBlocks): \(samples.count) samples, queue=\(self.micSamples.count)")
+            }
+        }
     }
 
     func setMicrophoneEnabled(_ enabled: Bool) {
@@ -285,6 +311,9 @@ final class TTCustomAudioMixer {
         let systemUnderrun = systemEnabled && systemAvailable < frameCount
         if micUnderrun { micUnderruns += 1 }
         if systemUnderrun { systemUnderruns += 1 }
+        if (micUnderrun || systemUnderrun) && (micUnderruns + systemUnderruns == 1 || (micUnderruns + systemUnderruns) % 100 == 0) {
+            trace("mixer underrun: micAvailable=\(micAvailable), systemAvailable=\(systemAvailable), micUnderruns=\(self.micUnderruns), systemUnderruns=\(self.systemUnderruns)")
+        }
         if micWasUnderrunning && !micUnderrun { micRecoveryEvents += 1 }
         if systemWasUnderrunning && !systemUnderrun { systemRecoveryEvents += 1 }
         micWasUnderrunning = micUnderrun

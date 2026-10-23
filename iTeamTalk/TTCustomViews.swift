@@ -1,5 +1,6 @@
 import AVKit
 import AVFoundation
+import ReplayKit
 import SwiftUI
 import UIKit
 
@@ -330,7 +331,7 @@ struct TTCustomMainAudioTab: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Label("Voice", systemImage: "mic.fill")
                             .font(.headline)
-                        HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 12) {
                             TTCustomAudioSourceButton(
                                 title: session.transmitting ? "Speaking" : "Mic muted",
                                 systemImage: session.transmitting ? "mic.fill" : "mic.slash.fill",
@@ -343,7 +344,7 @@ struct TTCustomMainAudioTab: View {
 
                             TTCustomAudioSourceButton(
                                 title: session.sharingSystemAudio
-                                    ? (session.systemAudioMuted ? "System muted" : "System audio")
+                                    ? (session.systemAudioMuted ? "System muted" : "System audio on")
                                     : "Share system audio",
                                 systemImage: session.systemAudioMuted ? "speaker.slash.fill" : "waveform",
                                 isActive: session.sharingSystemAudio && !session.systemAudioMuted
@@ -351,7 +352,7 @@ struct TTCustomMainAudioTab: View {
                                 if session.sharingSystemAudio {
                                     session.setSystemAudioMuted(!session.systemAudioMuted)
                                 } else {
-                                    session.setSystemAudioSharing(true)
+                                    session.startSystemAudioSharing()
                                 }
                             }
                             .accessibilityLabel(
@@ -362,7 +363,7 @@ struct TTCustomMainAudioTab: View {
                             .accessibilityHint(
                                 session.sharingSystemAudio
                                     ? "Double tap to \(session.systemAudioMuted ? "unmute" : "mute") system audio"
-                                    : "Double tap to enable system audio sharing"
+                                    : "Double tap to choose an app or display for system audio"
                             )
                         }
 
@@ -434,6 +435,95 @@ struct TTCustomMainAudioTab: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .sheet(item: $selectedUser) { user in
             TTCustomUserDetailSheet(userID: user.id, session: session)
+        }
+    }
+}
+
+struct TTCustomReplayKitPicker: UIViewRepresentable {
+    func makeUIView(context: Context) -> RPSystemBroadcastPickerView {
+        let picker = RPSystemBroadcastPickerView(frame: .zero)
+        picker.preferredExtension = "com.derrick.ttcustom.broadcast"
+        picker.showsMicrophoneButton = true
+        picker.backgroundColor = .secondarySystemBackground
+        picker.tintColor = .systemBlue
+        picker.layer.cornerRadius = 10
+        picker.clipsToBounds = true
+        picker.isAccessibilityElement = true
+        picker.accessibilityTraits = .button
+        picker.accessibilityLabel = "Start TT Audio broadcast"
+        picker.accessibilityHint = "Double tap, choose TT Audio, then enable the microphone"
+        return picker
+    }
+
+    func updateUIView(_ picker: RPSystemBroadcastPickerView, context: Context) {
+        picker.preferredExtension = "com.derrick.ttcustom.broadcast"
+        picker.showsMicrophoneButton = true
+        picker.backgroundColor = .secondarySystemBackground
+        picker.tintColor = .systemBlue
+        picker.layer.cornerRadius = 10
+        picker.clipsToBounds = true
+        picker.isAccessibilityElement = true
+        picker.accessibilityTraits = .button
+        picker.accessibilityLabel = "Start TT Audio broadcast"
+        picker.accessibilityHint = "Double tap, choose TT Audio, then enable the microphone"
+    }
+}
+
+/// Diagnostic host that puts ReplayKit's picker directly in a UIKit view
+/// controller, bypassing the previous SwiftUI-only layout path.
+struct TTCustomReplayKitUIKitPicker: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> TTCustomReplayKitPickerViewController {
+        TTCustomReplayKitPickerViewController()
+    }
+
+    func updateUIViewController(_ controller: TTCustomReplayKitPickerViewController, context: Context) {
+        controller.configure()
+    }
+}
+
+final class TTCustomReplayKitPickerViewController: UIViewController {
+    private let picker = RPSystemBroadcastPickerView(frame: .zero)
+    private var didLogLayout = false
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .secondarySystemBackground
+        view.layer.cornerRadius = 10
+        view.clipsToBounds = true
+        picker.showsMicrophoneButton = true
+        view.addSubview(picker)
+        configure()
+        logPickerState("viewDidLoad")
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        picker.frame = view.bounds.insetBy(dx: 4, dy: 4)
+        if !didLogLayout {
+            didLogLayout = true
+            logPickerState("viewDidLayoutSubviews")
+        }
+    }
+
+    func configure() {
+        picker.preferredExtension = "com.derrick.ttcustom.broadcast"
+        picker.showsMicrophoneButton = true
+        picker.isAccessibilityElement = true
+        picker.accessibilityTraits = .button
+        picker.accessibilityLabel = "Start TT Audio broadcast"
+        picker.accessibilityHint = "Double tap, choose TT Audio, then enable the microphone"
+    }
+
+    private func logPickerState(_ stage: String) {
+        let hit = picker.hitTest(CGPoint(x: picker.bounds.midX, y: picker.bounds.midY), with: nil)
+        print("[ReplayKitProbe] \(stage): class=\(type(of: picker)), preferredExtension=\(picker.preferredExtension ?? "nil"), frame=\(picker.frame), bounds=\(picker.bounds), hidden=\(picker.isHidden), alpha=\(picker.alpha), enabledInteraction=\(picker.isUserInteractionEnabled), hit=\(String(describing: hit.map { type(of: $0) })), voiceOver=\(UIAccessibility.isVoiceOverRunning)")
+        dumpSubviews(picker, indent: "  ")
+    }
+
+    private func dumpSubviews(_ view: UIView, indent: String) {
+        for child in view.subviews {
+            print("[ReplayKitProbe] \(indent)subview=\(type(of: child)), frame=\(child.frame), hidden=\(child.isHidden), alpha=\(child.alpha), interaction=\(child.isUserInteractionEnabled), accessible=\(child.isAccessibilityElement), label=\(child.accessibilityLabel ?? "nil")")
+            dumpSubviews(child, indent: indent + "  ")
         }
     }
 }

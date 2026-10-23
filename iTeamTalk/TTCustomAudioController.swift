@@ -245,7 +245,7 @@ func setTransmit(_ enabled: Bool) {
                 noiseGateEnabled: noiseGateEnabled,
                 compressorEnabled: compressorEnabled,
                 limiterEnabled: limiterEnabled,
-                useEngineMicrophone: false
+                useEngineMicrophone: true
             )
         } catch {
             client.closeSoundDevices()
@@ -255,12 +255,8 @@ func setTransmit(_ enabled: Bool) {
         }
 
         let capture = TTCustomSystemAudioCapture()
-        capture.onAudio = { [weak self, weak mixer] samples in
+        capture.onAudio = { [weak mixer] samples in
             mixer?.appendSystemAudio(samples)
-            _ = self
-        }
-        capture.onMicrophoneAudio = { [weak mixer] samples in
-            mixer?.appendMicrophoneAudio(samples)
         }
         capture.onFailure = { [weak self] message in
             Task { @MainActor [weak self] in
@@ -270,10 +266,100 @@ func setTransmit(_ enabled: Bool) {
         }
         audioMixer = mixer
         systemAudioCapture = capture
+        replayKitBridge?.stop()
+        replayKitBridge = nil
         sharingSystemAudio = true
         audioPhase = .sharing
-        status = "Choose an app or display to share"
-        capture.presentPicker()
+        status = "Choose an app or display to share system audio"
+        capture.presentPicker(capturesMicrophone: false)
+    }
+
+    /// Starts only the localhost listener. This is safe to do before the user
+    /// starts the Apple broadcast picker because it does not claim the audio
+    /// session or replace the normal TeamTalk microphone.
+    func prepareReplayKitBridge() {
+        guard connected, replayKitBridge == nil else { return }
+        let bridge = TTCustomReplayKitBridge()
+        do {
+            try bridge.start()
+        } catch {
+            status = "Could not prepare ReplayKit broadcast: \(error.localizedDescription)"
+            return
+        }
+        bridge.onMicrophoneAudio = { [weak self] samples in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.startReplayKitAudioPipelineIfNeeded()
+                self.audioMixer?.appendMicrophoneAudio(samples)
+            }
+        }
+        bridge.onSystemAudio = { [weak self] samples in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.startReplayKitAudioPipelineIfNeeded()
+                self.audioMixer?.appendSystemAudio(samples)
+            }
+        }
+        replayKitBridge = bridge
+        status = "Ready — tap the broadcast control to start TT Audio"
+    }
+
+    /// Starts the TeamTalk mixer only after ReplayKit has produced real audio.
+    private func startReplayKitAudioPipelineIfNeeded() {
+        guard audioMixer == nil else { return }
+        guard connected else { return }
+
+        audioPhase = .configuring
+        client.enableVoiceTransmission(false)
+        client.closeSoundDuplexDevices()
+        client.closeSoundDevices()
+        guard prepareAudioSession(),
+              client.initSoundOutputDevice(id: echoCancellation ? TeamTalkSoundDeviceID.voiceProcessingIO : TeamTalkSoundDeviceID.remoteIO),
+              activateAudioSession() else {
+            client.closeSoundDevices()
+            status = "Could not prepare ReplayKit audio"
+            audioPhase = .idle
+            return
+        }
+
+        let mixer = TTCustomAudioMixer(client: client)
+        do {
+            try mixer.start(
+                micEnabled: transmitting,
+                systemEnabled: !systemAudioMuted,
+                micGain: micGain,
+                systemGain: systemAudioGain,
+                masterGain: masterTransmitGain,
+                automaticGainControl: automaticGainControl,
+                noiseGateEnabled: noiseGateEnabled,
+                compressorEnabled: compressorEnabled,
+                limiterEnabled: limiterEnabled,
+                useEngineMicrophone: false
+            )
+        } catch {
+            client.closeSoundDevices()
+            status = "Could not start ReplayKit mixer: \(error.localizedDescription)"
+            audioPhase = .idle
+            return
+        }
+
+        audioMixer = mixer
+        systemAudioCapture = nil
+        sharingSystemAudio = true
+        audioPhase = .sharing
+        status = "TT Audio broadcast active"
+    }
+
+    /// Prepares the listener and immediately starts the pipeline for callers
+    /// that explicitly request sharing outside the in-app picker.
+    func startReplayKitSharing() {
+        guard audioPhase == .idle || audioPhase == .ready else { return }
+        guard connected else {
+            status = "Join a channel before sharing system audio"
+            return
+        }
+        prepareReplayKitBridge()
+        startReplayKitAudioPipelineIfNeeded()
     }
 
     func stopSystemAudioSharing(reconfigure: Bool, completion: (() -> Void)? = nil) {
@@ -294,6 +380,8 @@ func setTransmit(_ enabled: Bool) {
 
     func finishStoppingSystemAudio(reconfigure: Bool, completion: (() -> Void)?) {
         systemAudioCapture = nil
+        replayKitBridge?.stop()
+        replayKitBridge = nil
         audioMixer?.stop()
         audioMixer = nil
         sharingSystemAudio = false

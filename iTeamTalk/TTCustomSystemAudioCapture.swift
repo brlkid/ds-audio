@@ -1,14 +1,24 @@
 import AVFoundation
 import Foundation
+import OSLog
 import ScreenCaptureKit
 
 @available(iOS 27.0, *)
 final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver, SCStreamOutput, SCStreamDelegate {
+    private let logger = Logger(subsystem: "com.derrick.ttcustom", category: "screen-capture")
     private let callbackQueue = DispatchQueue(label: "com.derrick.ttcustom.system-audio", qos: .userInitiated)
     private let stateLock = NSLock()
     private var stream: SCStream?
     private var picker: SCContentSharingPicker?
     private var acceptingCallbacks = false
+    private var capturesMicrophone = false
+    private var audioCallbackCount = 0
+    private var microphoneCallbackCount = 0
+
+    private func trace(_ message: String) {
+        logger.info("\(message, privacy: .public)")
+        print("[TTCapture] \(message)")
+    }
     private let audioResampler = TTCustomStreamingResampler()
     private let microphoneResampler = TTCustomStreamingResampler()
     var onAudio: (([Int16]) -> Void)?
@@ -27,20 +37,25 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         stateLock.unlock()
     }
 
-    func presentPicker() {
+    func presentPicker(capturesMicrophone: Bool = false) {
+        trace("presentPicker: configuring system content-sharing picker")
+        self.capturesMicrophone = capturesMicrophone
         callbackQueue.async { [weak self] in
             self?.audioResampler.reset()
             self?.microphoneResampler.reset()
+            self?.audioCallbackCount = 0
+            self?.microphoneCallbackCount = 0
         }
         setAcceptingCallbacks(true)
         let picker = SCContentSharingPicker.shared
         var configuration = SCContentSharingPickerConfiguration()
-        configuration.showsMicrophoneControl = true
+        configuration.showsMicrophoneControl = capturesMicrophone
         picker.defaultConfiguration = configuration
         picker.add(self)
         picker.isActive = true
         self.picker = picker
         picker.present()
+        trace("presentPicker: picker presented; waiting for filter update")
     }
 
     func stop(completion: @escaping () -> Void = {}) {
@@ -66,13 +81,9 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         for stream: SCStream?
     ) {
         guard isAcceptingCallbacks else { return }
+        trace("picker didUpdate: microphoneEnabled=\(filter.isMicrophoneEnabled)")
         self.stream?.stopCapture()
         self.stream = nil
-
-        guard filter.isMicrophoneEnabled else {
-            onFailure?("Microphone must be enabled in the screen-sharing controls")
-            return
-        }
 
         let configuration = SCStreamConfiguration()
         configuration.capturesAudio = true
@@ -81,6 +92,7 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         configuration.excludesCurrentProcessAudio = true
 
         let capture = SCStream(filter: filter, configuration: configuration, delegate: self)
+        trace("creating SCStream: sampleRate=\(configuration.sampleRate), channels=\(configuration.channelCount)")
         do {
             try capture.addStreamOutput(
                 self,
@@ -91,20 +103,26 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
             onFailure?("Could not attach system audio capture: \(error.localizedDescription)")
             return
         }
-        do {
-            try capture.addStreamOutput(
-                self,
-                type: .microphone,
-                sampleHandlerQueue: callbackQueue
-            )
-        } catch {
-            onFailure?("Could not attach microphone capture: \(error.localizedDescription)")
-            return
+        if capturesMicrophone && filter.isMicrophoneEnabled {
+            do {
+                try capture.addStreamOutput(
+                    self,
+                    type: .microphone,
+                    sampleHandlerQueue: callbackQueue
+                )
+            } catch {
+                onFailure?("Could not attach microphone capture: \(error.localizedDescription)")
+                return
+            }
         }
         self.stream = capture
         capture.startCapture { [weak self] error in
             if let error {
+                self?.logger.error("SCStream start failed: \(error.localizedDescription, privacy: .public)")
+                self?.trace("SCStream start failed: \(error.localizedDescription)")
                 self?.onFailure?("System audio capture failed: \(error.localizedDescription)")
+            } else {
+                self?.trace("SCStream start completed")
             }
         }
     }
@@ -131,13 +149,29 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         let resampler: TTCustomStreamingResampler
         switch type {
         case .audio:
+            audioCallbackCount += 1
+            if audioCallbackCount == 1 || audioCallbackCount % 100 == 0 {
+                self.trace("audio callback #\(self.audioCallbackCount)")
+            }
             resampler = audioResampler
         case .microphone:
+            microphoneCallbackCount += 1
+            if microphoneCallbackCount == 1 || microphoneCallbackCount % 100 == 0 {
+                self.trace("microphone callback #\(self.microphoneCallbackCount)")
+            }
             resampler = microphoneResampler
         default:
             return
         }
-        guard let samples = samples(from: sampleBuffer, resampler: resampler) else { return }
+        guard let samples = samples(from: sampleBuffer, resampler: resampler) else {
+            let streamName = type == .microphone ? "microphone" : "audio"
+            logger.error("\(streamName, privacy: .public) sample conversion returned no samples")
+            trace("\(streamName) sample conversion returned no samples")
+            return
+        }
+        if type == .microphone && microphoneCallbackCount == 1 {
+            trace("first microphone block converted: \(samples.count) samples")
+        }
         switch type {
         case .audio:
             onAudio?(samples)
