@@ -42,7 +42,10 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     @Published var status = "Not connected"
     @Published var connected = false
     @Published var transmitting = false
-    @Published var systemCallControlsEnabled = UserDefaults.standard.object(forKey: "ttcustom.systemCallControls") as? Bool ?? true
+    // CallKit must be activated before the TeamTalk audio unit is opened.
+    // Keep it opt-in until that handoff is explicitly requested; enabling it
+    // by default can cause iOS to renegotiate an already-running route.
+    @Published var systemCallControlsEnabled = UserDefaults.standard.object(forKey: "ttcustom.systemCallControls") as? Bool ?? false
     @Published var sharingSystemAudio = false
     @Published var systemAudioMuted = false
     @Published var micGain: Double = UserDefaults.standard.object(forKey: "ttcustom.micGain") as? Double ?? 1.0
