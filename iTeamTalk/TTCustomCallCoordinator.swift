@@ -94,7 +94,16 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
     }
 
     func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
-        action.fulfill()
+        let session = session
+        Task { @MainActor in
+            guard let session, session.prepareAudioSession() else {
+                action.fail()
+                return
+            }
+            // CallKit activates the prepared session after fulfillment. The
+            // TeamTalk audio unit is opened from didActivateAudioSession.
+            action.fulfill()
+        }
     }
 
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {

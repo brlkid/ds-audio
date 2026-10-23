@@ -34,7 +34,18 @@ func setTransmit(_ enabled: Bool) {
         }
         if audioConfigured {
             guard client.enableVoiceTransmission(enabled) else {
-                status = enabled ? "Could not enable microphone transmission" : "Could not mute microphone"
+                if enabled {
+                    // The native audio unit can briefly lose its transmission
+                    // handle during an AVAudioSession/CallKit route change.
+                    // Rebuild the duplex device and retry instead of leaving
+                    // the user permanently unable to unmute.
+                    transmitting = true
+                    audioConfigured = false
+                    status = "Restarting microphone…"
+                    configureAudio()
+                } else {
+                    status = "Could not mute microphone"
+                }
                 return
             }
             transmitting = enabled
