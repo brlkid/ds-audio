@@ -55,6 +55,12 @@ final class TTCustomCallCoordinator: NSObject, CXProviderDelegate {
                     onFailure()
                     return
                 }
+                let update = CXCallUpdate()
+                update.localizedCallerName = "TeamTalk"
+                update.supportsDTMF = false
+                update.supportsHolding = false
+                update.supportsGrouping = false
+                self.provider.reportCall(with: uuid, updated: update)
                 self.provider.reportOutgoingCall(with: uuid, startedConnectingAt: Date())
             }
         }
