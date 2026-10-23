@@ -100,9 +100,6 @@ private struct TTCustomSettingsPane: View {
                         get: { session.systemCallControlsEnabled },
                         set: { session.setSystemCallControlsEnabled($0) }
                     ))
-                    Text("Expose mute and end-call controls on the lock screen, headsets, and compatible car systems.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                     Text(session.status)
                         .foregroundStyle(.secondary)
                     Button("Disconnect", role: .destructive) {
@@ -168,9 +165,6 @@ struct TTCustomAudioControlsTab: View {
                     VStack(alignment: .leading, spacing: 14) {
                         Label("Transmit mix", systemImage: "waveform.and.mic")
                             .font(.headline)
-                        Text("Mic and shared system audio are mixed into one TeamTalk stream.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                         TTCustomGainSlider(title: "Microphone", value: Binding(
                             get: { session.micGain }, set: { session.setMicGain($0) }
                         ))
@@ -225,9 +219,6 @@ struct TTCustomAudioControlsTab: View {
                             get: { session.limiterEnabled },
                             set: { session.setLimiterEnabled($0) }
                         ))
-                        Text("The software gate, compressor, and limiter apply to the mixed transmit path. Apple voice processing and AGC depend on the active microphone route.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                     }
                 }
                 GroupBox {
@@ -390,9 +381,6 @@ struct TTCustomMainAudioTab: View {
 
                         Label("People and user actions", systemImage: "person.2.fill")
                             .font(.headline)
-                        Text("Adjust a person’s volume or open Actions to mute, move, kick, or ban them when you have permission.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                         if session.remoteUsers.isEmpty {
                             Text("Nobody else is connected yet.")
                                 .foregroundStyle(.secondary)
@@ -772,9 +760,6 @@ private struct TTCustomCreateChannelSheet: View {
                 Section("Channel") {
                     TextField("Name", text: $name)
                     SecureField("Password (optional)", text: $password)
-                    Text("The channel starts with the server's default audio codec. Advanced audio settings can be edited after creation.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
                 Section {
                     Button("Create") {
