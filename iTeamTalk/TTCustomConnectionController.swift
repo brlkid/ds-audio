@@ -77,6 +77,7 @@ func connect() {
         rootJoinWorkItem = nil
         stopSystemAudioSharing(reconfigure: false) { [weak self] in
             guard let self else { return }
+            self.callCoordinator.endFromApp()
             self.appleAudioPipeline?.stop()
             self.appleAudioPipeline = nil
             self.client.closeSoundDuplexDevices()
@@ -282,6 +283,11 @@ func connect() {
                 connectionLifecycle.markJoined()
                 refreshChannelAudio()
                 configureAudio()
+                if systemCallControlsEnabled {
+                    let channel = client.withChannel(id: client.myChannelID) { $0 }
+                    let name = TeamTalkString.channel(.name, from: channel)
+                    callCoordinator.begin(channelName: name.isEmpty ? "TeamTalk channel" : name)
+                }
                 return
             }
             addRemoteUser(user)

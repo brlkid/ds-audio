@@ -96,6 +96,13 @@ private struct TTCustomSettingsPane: View {
                 Section("Connection") {
                     LabeledContent("Server", value: "\(session.host):\(session.tcpPort)")
                     LabeledContent("Username", value: session.username)
+                    Toggle("System call controls", isOn: Binding(
+                        get: { session.systemCallControlsEnabled },
+                        set: { session.setSystemCallControlsEnabled($0) }
+                    ))
+                    Text("Expose mute and end-call controls on the lock screen, headsets, and compatible car systems.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                     Text(session.status)
                         .foregroundStyle(.secondary)
                     Button("Disconnect", role: .destructive) {

@@ -42,6 +42,7 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     @Published var status = "Not connected"
     @Published var connected = false
     @Published var transmitting = false
+    @Published var systemCallControlsEnabled = UserDefaults.standard.object(forKey: "ttcustom.systemCallControls") as? Bool ?? true
     @Published var sharingSystemAudio = false
     @Published var systemAudioMuted = false
     @Published var micGain: Double = UserDefaults.standard.object(forKey: "ttcustom.micGain") as? Double ?? 1.0
@@ -111,10 +112,12 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     // the iPhone receiver/earpiece.
     var hasExplicitOutputSelection = true
     var audioPhase: TTCustomAudioPhase = .idle
+    var callCoordinator: TTCustomCallCoordinator!
     nonisolated let messageMailbox = TTCustomMessageMailbox()
 
     override init() {
         super.init()
+        callCoordinator = TTCustomCallCoordinator(session: self)
         client.addObserver(self)
         refreshRoutes()
         // Route discovery is intentionally passive at launch. Activating or
@@ -155,6 +158,7 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
         connectionRetryWorkItem?.cancel()
         rootJoinWorkItem?.cancel()
         client.removeObserver(self)
+        callCoordinator = nil
     }
 
     func setUserVolume(_ value: Double, for userID: Int32) {
@@ -279,6 +283,12 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
 
     func refreshServerChannels() {
         serverChannels = client.serverChannels
+    }
+
+    func setSystemCallControlsEnabled(_ enabled: Bool) {
+        systemCallControlsEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: "ttcustom.systemCallControls")
+        if !enabled { callCoordinator.endFromApp() }
     }
 
     func joinChannelFromBrowser(_ channel: Channel, password: String = "") {
