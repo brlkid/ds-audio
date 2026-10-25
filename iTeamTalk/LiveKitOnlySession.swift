@@ -5,6 +5,13 @@ import SwiftUI
 
 @MainActor
 final class LiveKitOnlySession: ObservableObject {
+    struct Participant: Identifiable, Equatable {
+        let id: String
+        let name: String
+        var isSpeaking: Bool
+        var volume: Double
+    }
+
     struct AudioSource: Identifiable, Equatable {
         let id: String
         let title: String
@@ -22,7 +29,7 @@ final class LiveKitOnlySession: ObservableObject {
     @Published var connected = false
     @Published var microphoneEnabled = false
     @Published var participantCount = 0
-    @Published var participants: [String] = []
+    @Published var participants: [Participant] = []
     @Published var inputRoute = "Not active"
     @Published var outputRoute = "Not active"
     @Published var microphoneLevel = UserDefaults.standard.double(forKey: "ttcustom.micLevel") == 0 ? 1 : UserDefaults.standard.double(forKey: "ttcustom.micLevel")
@@ -34,9 +41,25 @@ final class LiveKitOnlySession: ObservableObject {
     @Published var audioStatus = "Microphone track is not published"
     @Published var sharingSystemAudio = false
     @Published var systemAudioMuted = false
+    @Published var callControlsEnabled = UserDefaults.standard.bool(forKey: "ttcustom.callControls")
 
     let transport = LiveKitRoomTransport()
     private let auth = TTCustomLiveKitAuthClient()
+    private let callCoordinator = DSAudioCallCoordinator()
+
+    init() {
+        password = TTCustomKeychain.load(host: host, username: username)
+        callCoordinator.onMuteChanged = { [weak self] muted in
+            Task { @MainActor in
+                guard let self else { return }
+                do { try await self.setMicrophone(enabled: !muted) }
+                catch { self.status = error.localizedDescription }
+            }
+        }
+        callCoordinator.onEnded = { [weak self] in
+            Task { @MainActor in self?.disconnect() }
+        }
+    }
 
     private var participantIdentity: String {
         let key = "ttcustom.livekitParticipantIdentity"
@@ -65,6 +88,7 @@ final class LiveKitOnlySession: ObservableObject {
         UserDefaults.standard.set(username, forKey: "ttcustom.username")
         UserDefaults.standard.set(nickname, forKey: "ttcustom.nickname")
         UserDefaults.standard.set(roomName, forKey: "ttcustom.room")
+        TTCustomKeychain.save(password, host: host, username: username)
         status = "Connecting…"
         let host = host, username = username, password = password, nickname = nickname, roomName = roomName
         Task { @MainActor [weak self] in
@@ -77,6 +101,7 @@ final class LiveKitOnlySession: ObservableObject {
                 refreshAudioRoute()
                 refreshParticipants()
                 try await setMicrophone(enabled: true)
+                if callControlsEnabled { callCoordinator.begin(roomName: roomName) }
             } catch {
                 connected = false
                 microphoneEnabled = false
@@ -113,6 +138,13 @@ final class LiveKitOnlySession: ObservableObject {
             do { try await setMicrophone(enabled: enabled) }
             catch { status = error.localizedDescription }
         }
+    }
+
+    func setCallControlsEnabled(_ enabled: Bool) {
+        callControlsEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: "ttcustom.callControls")
+        if enabled, connected { callCoordinator.begin(roomName: roomName) }
+        if !enabled { callCoordinator.endFromApp() }
     }
 
     func applyProcessing() {
@@ -186,11 +218,17 @@ final class LiveKitOnlySession: ObservableObject {
     }
 
     func refreshParticipants() {
-        participants = transport.room.remoteParticipants.values.map { participant in
-            if let name = participant.name, !name.isEmpty { return name }
-            return String(describing: participant.identity)
-        }.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        participants = transport.remoteParticipantSnapshots().map {
+            Participant(id: $0.id, name: $0.name, isSpeaking: $0.isSpeaking, volume: $0.volume)
+        }
         participantCount = participants.count + 1
+    }
+
+    func setParticipantVolume(_ participant: Participant, value: Double) {
+        guard let index = participants.firstIndex(where: { $0.id == participant.id }) else { return }
+        participants[index].volume = value
+        transport.setRemoteParticipantVolume(identity: participant.id, volume: value)
+        UserDefaults.standard.set(value, forKey: "ttcustom.volume.\(participant.id)")
     }
 
     func refreshAudioRoute() {

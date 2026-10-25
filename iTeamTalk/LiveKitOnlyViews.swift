@@ -60,8 +60,20 @@ private struct ChannelTab: View {
             }
             Section("People") {
                 Label("You · \(session.nickname)", systemImage: session.microphoneEnabled ? "mic.fill" : "mic.slash.fill")
-                ForEach(session.participants, id: \.self) { participant in
-                    Label(participant, systemImage: "person.fill")
+                ForEach(session.participants) { participant in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label(participant.name, systemImage: participant.isSpeaking ? "speaker.wave.2.fill" : "person.fill")
+                            Spacer()
+                            Text("\(Int(participant.volume * 100))%")
+                                .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                        }
+                        Slider(value: Binding(
+                            get: { participant.volume },
+                            set: { session.setParticipantVolume(participant, value: $0) }
+                        ), in: 0...2, step: 0.05)
+                        .accessibilityLabel("Volume for \(participant.name)")
+                    }
                 }
                 if session.participants.isEmpty { Text("No other participants").foregroundStyle(.secondary) }
             }
@@ -144,6 +156,14 @@ private struct ConfigTab: View {
                 TextField("Username", text: $session.username).textInputAutocapitalization(.never).autocorrectionDisabled()
                 SecureField("Password", text: $session.password)
                 TextField("Display name", text: $session.nickname)
+            }
+            Section("System integration") {
+                Toggle("System call controls", isOn: Binding(
+                    get: { session.callControlsEnabled },
+                    set: { session.setCallControlsEnabled($0) }
+                ))
+                Text("When enabled, D’s Audio appears as an active iOS call so lock-screen and headset mute controls can control the LiveKit microphone.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
             Section("About this build") {
                 Text("D’s Audio publishes the microphone as a named LiveKit audio track. A future capture source can be published as a separate System audio track, allowing listeners to mute or adjust each source independently.")

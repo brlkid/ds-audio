@@ -37,6 +37,7 @@
 		9A0000010000000000000025 /* LiveKitOnlyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000026 /* LiveKitOnlyViews.swift */; };
 		9A0000010000000000000027 /* TTCustomAudioResampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000028 /* TTCustomAudioResampler.swift */; };
 		9A0000010000000000000029 /* TTCustomSystemAudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000016 /* TTCustomSystemAudioCapture.swift */; };
+		9A000001000000000000002A /* DSAudioCallCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A000001000000000000002B /* DSAudioCallCoordinator.swift */; };
 		9A000001000000000000001F /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000020 /* CallKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -131,6 +132,7 @@
 		9A0000010000000000000024 /* LiveKitOnlySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlySession.swift; sourceTree = "<group>"; };
 		9A0000010000000000000026 /* LiveKitOnlyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlyViews.swift; sourceTree = "<group>"; };
 		9A0000010000000000000028 /* TTCustomAudioResampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomAudioResampler.swift; sourceTree = "<group>"; };
+		9A000001000000000000002B /* DSAudioCallCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSAudioCallCoordinator.swift; sourceTree = "<group>"; };
 		9A0000010000000000000024 /* LiveKitOnlySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlySession.swift; sourceTree = "<group>"; };
 		9A0000010000000000000026 /* LiveKitOnlyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlyViews.swift; sourceTree = "<group>"; };
 		9A0000010000000000000020 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
@@ -235,6 +237,7 @@
 				9A0000010000000000000024 /* LiveKitOnlySession.swift */,
 				9A0000010000000000000026 /* LiveKitOnlyViews.swift */,
 				9A0000010000000000000028 /* TTCustomAudioResampler.swift */,
+				9A000001000000000000002B /* DSAudioCallCoordinator.swift */,
 				254B7A6E1B98C89600BE0DEF /* AppInfo.swift */,
 				25DD929E1BB2FA0E00779988 /* Common.swift */,
 				25DF9A011C5E00E100469BA8 /* License.swift */,
@@ -482,10 +485,12 @@
 				254B7A4D1B98BAA300BE0DEF /* AppDelegate.swift in Sources */,
 				598F236865BD42938957BDE2 /* iTeamTalkApp.swift in Sources */,
 				9A0000010000000000000021 /* TTCustomLiveKitAuth.swift in Sources */,
+				9A0000010000000000000011 /* TTCustomKeychain.swift in Sources */,
 				9A0000010000000000000023 /* LiveKitOnlySession.swift in Sources */,
 				9A0000010000000000000025 /* LiveKitOnlyViews.swift in Sources */,
 				9A0000010000000000000027 /* TTCustomAudioResampler.swift in Sources */,
 				9A0000010000000000000029 /* TTCustomSystemAudioCapture.swift in Sources */,
+				9A000001000000000000002A /* DSAudioCallCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

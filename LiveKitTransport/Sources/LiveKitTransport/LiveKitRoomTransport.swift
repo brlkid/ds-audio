@@ -7,6 +7,20 @@ import LiveKit
 /// stays in the app because the app already owns the saved server credentials.
 @MainActor
 public final class LiveKitRoomTransport: NSObject {
+    public struct RemoteParticipantSnapshot: Identifiable, Sendable {
+        public let id: String
+        public let name: String
+        public let isSpeaking: Bool
+        public let volume: Double
+
+        public init(id: String, name: String, isSpeaking: Bool, volume: Double) {
+            self.id = id
+            self.name = name
+            self.isSpeaking = isSpeaking
+            self.volume = volume
+        }
+    }
+
     public let room: Room
     private var localTracks: [String: LocalAudioTrack] = [:]
 
@@ -81,6 +95,26 @@ public final class LiveKitRoomTransport: NSObject {
             channel[index] = Float(samples[index]) * scale
         }
         AudioManager.shared.mixer.capture(appAudio: buffer)
+    }
+
+    public func remoteParticipantSnapshots() -> [RemoteParticipantSnapshot] {
+        room.remoteParticipants.values.map { participant in
+            let audioTracks = participant.audioTracks.compactMap { $0.track as? RemoteAudioTrack }
+            let volume = audioTracks.first?.volume ?? 1
+            return RemoteParticipantSnapshot(
+                id: String(describing: participant.identity),
+                name: participant.name?.isEmpty == false ? participant.name! : String(describing: participant.identity),
+                isSpeaking: participant.isSpeaking,
+                volume: volume
+            )
+        }.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    public func setRemoteParticipantVolume(identity: String, volume: Double) {
+        guard let participant = room.remoteParticipants.values.first(where: { String(describing: $0.identity) == identity }) else { return }
+        for publication in participant.audioTracks {
+            (publication.track as? RemoteAudioTrack)?.volume = min(10, max(0, volume))
+        }
     }
 
     public func unpublishAllLocalAudio() async {
