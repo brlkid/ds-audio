@@ -43,7 +43,7 @@ private struct LiveKitOnlyServerView: View {
                 Section("Status") { Text(session.status).foregroundStyle(.secondary) }
             }
         }
-        .navigationTitle("TT Custom")
+        .navigationTitle("D's Audio")
     }
 }
 
@@ -98,7 +98,7 @@ private struct LiveKitOnlyChannelView: View {
             .tag(2)
         }
         .onAppear { session.refreshAudioRoute(); session.refreshParticipants() }
-        .navigationTitle("TT Custom")
+        .navigationTitle("D's Audio")
     }
 }
 

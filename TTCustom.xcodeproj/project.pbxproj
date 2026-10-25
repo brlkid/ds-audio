@@ -678,7 +678,7 @@
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = iTeamTalk/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "TT Custom";
+				INFOPLIST_KEY_CFBundleDisplayName = "D's Audio";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -686,8 +686,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 5.23;
-				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom;
-				PRODUCT_NAME = "TT Custom";
+				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.dsaudio;
+				PRODUCT_NAME = "D's Audio";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -706,7 +706,7 @@
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = "";
 				INFOPLIST_FILE = iTeamTalk/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "TT Custom";
+				INFOPLIST_KEY_CFBundleDisplayName = "D's Audio";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -714,8 +714,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 5.23;
-				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom;
-				PRODUCT_NAME = "TT Custom";
+				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.dsaudio;
+				PRODUCT_NAME = "D's Audio";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
