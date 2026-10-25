@@ -4,6 +4,10 @@ import Foundation
 
 @MainActor
 extension TTCustomSession {
+    var usesLiveKitBackend: Bool {
+        host.hasPrefix("http://") || host.hasPrefix("https://")
+    }
+
 func connect() {
         connectionGeneration &+= 1
         let generation = connectionGeneration
@@ -13,7 +17,11 @@ func connect() {
         networkHealth.reconnectCount = 0
         lastDiagnosticsPing = .distantPast
         connectionLifecycle.reset()
-        guard ttCustomIsValidPort(tcpPort), ttCustomIsValidPort(udpPort), host.isEmpty == false else {
+        guard host.isEmpty == false else {
+            status = "Enter a host and valid ports"
+            return
+        }
+        if !usesLiveKitBackend && (!ttCustomIsValidPort(tcpPort) || !ttCustomIsValidPort(udpPort)) {
             status = "Enter a host and valid ports"
             return
         }
@@ -32,6 +40,10 @@ func connect() {
 
     func beginConnect(host: String, tcpPort: String, udpPort: String, generation: UInt64? = nil) {
         if let generation, generation != connectionGeneration { return }
+        if usesLiveKitBackend {
+            beginLiveKitConnect(generation: generation)
+            return
+        }
         guard let tcp = Int32(tcpPort), let udp = Int32(udpPort),
               ttCustomIsValidPort(tcpPort), ttCustomIsValidPort(udpPort), !host.isEmpty else {
             status = "Enter a host and valid ports"
@@ -62,8 +74,65 @@ func connect() {
         scheduleConnectionTimeout(generation: connectionGeneration)
     }
 
+    private func beginLiveKitConnect(generation: UInt64? = nil) {
+        if let generation, generation != connectionGeneration { return }
+        UserDefaults.standard.set(host, forKey: "ttcustom.livekitURL")
+        UserDefaults.standard.set(username, forKey: "ttcustom.username")
+        UserDefaults.standard.set(nickname, forKey: "ttcustom.nickname")
+        TTCustomKeychain.save(password, host: host, username: username)
+        status = "Connecting to LiveKit…"
+        let transport = LiveKitRoomTransport()
+        liveKitTransport = transport
+        UserDefaults.standard.set(liveKitParticipantIdentity, forKey: "ttcustom.liveKitParticipantIdentity")
+        let currentHost = host
+        let currentUsername = username
+        let currentPassword = password
+        let currentNickname = nickname
+        let identity = liveKitParticipantIdentity
+        Task { @MainActor [weak self] in
+            guard let self, self.liveKitTransport === transport else { return }
+            do {
+                let auth = TTCustomLiveKitAuthClient()
+                let token = try await auth.requestToken(
+                    host: currentHost,
+                    username: currentUsername,
+                    password: currentPassword,
+                    room: "main",
+                    participantName: currentNickname,
+                    participantIdentity: identity
+                )
+                try await transport.connect(url: token.serverURL, token: token.participantToken)
+                try await transport.setMicrophone(enabled: true)
+                self.connected = true
+                self.loggedIn = true
+                self.transmitting = true
+                self.status = "Connected to main"
+            } catch {
+                self.liveKitTransport = nil
+                self.connected = false
+                self.loggedIn = false
+                self.transmitting = false
+                self.status = "LiveKit connection failed: \(error.localizedDescription)"
+            }
+        }
+    }
+
     func disconnect(invalidate: Bool = true, completion: (() -> Void)? = nil) {
         if invalidate { connectionGeneration &+= 1 }
+        if usesLiveKitBackend || liveKitTransport != nil {
+            let transport = liveKitTransport
+            liveKitTransport = nil
+            Task { @MainActor [weak self] in
+                await transport?.disconnect()
+                guard let self else { return }
+                self.connected = false
+                self.transmitting = false
+                self.loggedIn = false
+                if completion == nil { self.status = "Not connected" }
+                completion?()
+            }
+            return
+        }
         if completion == nil {
             connectionRetryWorkItem?.cancel()
             connectionRetryWorkItem = nil

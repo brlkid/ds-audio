@@ -23,12 +23,18 @@ struct TTCustomServerView: View {
     var body: some View {
         Form {
             Section("Server") {
-                TextField("Host", text: $session.host)
+                TextField("Host or LiveKit URL", text: $session.host)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                HStack {
-                    TextField("TCP port", text: $session.tcpPort).keyboardType(.numberPad)
-                    TextField("UDP port", text: $session.udpPort).keyboardType(.numberPad)
+                if session.host.hasPrefix("http://") || session.host.hasPrefix("https://") {
+                    Text("LiveKit mode: use the server URL, for example https://your-host.example")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else {
+                    HStack {
+                        TextField("TCP port", text: $session.tcpPort).keyboardType(.numberPad)
+                        TextField("UDP port", text: $session.udpPort).keyboardType(.numberPad)
+                    }
                 }
             }
             Section("Account") {

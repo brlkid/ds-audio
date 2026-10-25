@@ -119,6 +119,10 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     // the iPhone receiver/earpiece.
     var hasExplicitOutputSelection = true
     var audioPhase: TTCustomAudioPhase = .idle
+    /// An https/http host selects the LiveKit backend; bare hostnames retain
+    /// the legacy TeamTalk path during the incremental migration.
+    var liveKitTransport: LiveKitRoomTransport?
+    var liveKitParticipantIdentity = UserDefaults.standard.string(forKey: "ttcustom.liveKitParticipantIdentity") ?? "ios-\(UUID().uuidString.lowercased())"
     var callCoordinator: TTCustomCallCoordinator!
     nonisolated let messageMailbox = TTCustomMessageMailbox()
 

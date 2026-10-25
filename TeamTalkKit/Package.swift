@@ -12,12 +12,18 @@ let package = Package(
             name: "TeamTalkKit",
             targets: ["TeamTalkKit"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/livekit/client-sdk-swift.git", from: "2.5.1")
+    ],
     targets: [
         .target(
             name: "TeamTalkC",
             publicHeadersPath: "include"),
         .target(
             name: "TeamTalkKit",
-            dependencies: ["TeamTalkC"])
+            dependencies: [
+                "TeamTalkC",
+                .product(name: "LiveKit", package: "client-sdk-swift")
+            ])
     ]
 )

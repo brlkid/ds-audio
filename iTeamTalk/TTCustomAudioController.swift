@@ -22,6 +22,19 @@ let ttCustomUsesAppleAudioPipeline = false
 @MainActor
 extension TTCustomSession {
 func setTransmit(_ enabled: Bool) {
+        if let liveKitTransport {
+            transmitting = enabled
+            Task { @MainActor in
+                do {
+                    try await liveKitTransport.setMicrophone(enabled: enabled)
+                    status = enabled ? "Microphone enabled" : "Microphone muted"
+                } catch {
+                    transmitting = !enabled
+                    status = "Could not update microphone: \(error.localizedDescription)"
+                }
+            }
+            return
+        }
         if sharingSystemAudio {
             transmitting = enabled
             audioMixer?.setMicrophoneEnabled(enabled)
