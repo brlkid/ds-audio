@@ -297,12 +297,6 @@ func setTransmit(_ enabled: Bool) {
                 self?.enqueueDesktopFrame(frame)
             }
         }
-        capture.onVideoFailure = { [weak self] message in
-            Task { @MainActor [weak self] in
-                self?.sharingScreenVideo = false
-                self?.status = message
-            }
-        }
         capture.onFailure = { [weak self] message in
             Task { @MainActor [weak self] in
                 self?.stopSystemAudioSharing(reconfigure: true)
@@ -365,29 +359,17 @@ func setTransmit(_ enabled: Bool) {
             pendingDesktopFrame = frame
             return
         }
-        startDesktopFrameSend(frame)
+        sendDesktopFrame(frame)
     }
 
-    private func startDesktopFrameSend(_ frame: TeamTalkDesktopFrame) {
+    private func sendDesktopFrame(_ frame: TeamTalkDesktopFrame) {
         guard sharingSystemAudio, sharingScreenVideo else { return }
-        desktopFrameInFlight = true
-        let client = self.client
-        let sendTask = Task.detached(priority: .utility) {
-            client.sendDesktopFrame(frame)
-        }
-        Task { @MainActor [weak self] in
-            self?.finishDesktopFrameSend(await sendTask.value)
-        }
-    }
-
-    private func finishDesktopFrameSend(_ result: Int32) {
+        let result = client.sendDesktopFrame(frame)
         guard result > 0 else {
             desktopFrameInFlight = false
-            pendingDesktopFrame = nil
-            sharingScreenVideo = false
-            status = "Screen video unavailable; system audio sharing continues"
             return
         }
+        desktopFrameInFlight = true
     }
 
     func handleDesktopTransfer(bytesRemaining: Int32) {
@@ -395,7 +377,7 @@ func setTransmit(_ enabled: Bool) {
         desktopFrameInFlight = false
         if let pendingDesktopFrame {
             self.pendingDesktopFrame = nil
-            startDesktopFrameSend(pendingDesktopFrame)
+            sendDesktopFrame(pendingDesktopFrame)
         }
     }
 

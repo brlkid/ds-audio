@@ -1,5 +1,4 @@
 import AVFoundation
-import CoreImage
 import Foundation
 import OSLog
 import ScreenCaptureKit
@@ -18,7 +17,6 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     private var audioCallbackCount = 0
     private var microphoneCallbackCount = 0
     private var lastScreenFrameTime = CMTime.invalid
-    private let screenContext = CIContext(options: [.cacheIntermediates: false])
 
     private func trace(_ message: String) {
         logger.info("\(message, privacy: .public)")
@@ -29,7 +27,6 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     var onAudio: (([Int16]) -> Void)?
     var onMicrophoneAudio: (([Int16]) -> Void)?
     var onScreenFrame: ((TeamTalkDesktopFrame) -> Void)?
-    var onVideoFailure: ((String) -> Void)?
     var onFailure: ((String) -> Void)?
 
     private var isAcceptingCallbacks: Bool {
@@ -119,8 +116,8 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
                     sampleHandlerQueue: callbackQueue
                 )
             } catch {
-                capturesVideo = false
-                onVideoFailure?("Screen video unavailable; system audio sharing continues")
+                onFailure?("Could not attach screen video capture: \(error.localizedDescription)")
+                return
             }
         }
         if capturesMicrophone && filter.isMicrophoneEnabled {
@@ -184,7 +181,7 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
             let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
             if timestamp.isValid,
                lastScreenFrameTime.isValid,
-               CMTimeGetSeconds(timestamp - lastScreenFrameTime) < 0.5 {
+               CMTimeGetSeconds(timestamp - lastScreenFrameTime) < 0.2 {
                 return
             }
             if timestamp.isValid {
@@ -222,37 +219,12 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
         CVPixelBufferLockBaseAddress(imageBuffer, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(imageBuffer, .readOnly) }
-        guard CVPixelBufferGetBaseAddress(imageBuffer) != nil else { return nil }
+        guard let baseAddress = CVPixelBufferGetBaseAddress(imageBuffer) else { return nil }
 
-        let sourceWidth = CVPixelBufferGetWidth(imageBuffer)
-        let sourceHeight = CVPixelBufferGetHeight(imageBuffer)
-        let longestSide = max(sourceWidth, sourceHeight)
-        let scale = min(1.0, 640.0 / Double(longestSide))
-        let width = max(1, Int((Double(sourceWidth) * scale).rounded()))
-        let height = max(1, Int((Double(sourceHeight) * scale).rounded()))
-
-        var scaledBuffer: CVPixelBuffer?
-        let createStatus = CVPixelBufferCreate(
-            kCFAllocatorDefault,
-            width,
-            height,
-            kCVPixelFormatType_32BGRA,
-            [kCVPixelBufferIOSurfacePropertiesKey: [:]] as CFDictionary,
-            &scaledBuffer
-        )
-        guard createStatus == kCVReturnSuccess, let scaledBuffer else { return nil }
-        let scaleTransform = CGAffineTransform(scaleX: scale, y: scale)
-        screenContext.render(
-            CIImage(cvPixelBuffer: imageBuffer).transformed(by: scaleTransform),
-            to: scaledBuffer,
-            bounds: CGRect(x: 0, y: 0, width: width, height: height),
-            colorSpace: CGColorSpaceCreateDeviceRGB()
-        )
-        CVPixelBufferLockBaseAddress(scaledBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(scaledBuffer, .readOnly) }
-        guard let scaledBaseAddress = CVPixelBufferGetBaseAddress(scaledBuffer) else { return nil }
-        let bytesPerLine = CVPixelBufferGetBytesPerRow(scaledBuffer)
-        let pixels = Data(bytes: scaledBaseAddress, count: bytesPerLine * height)
+        let width = CVPixelBufferGetWidth(imageBuffer)
+        let height = CVPixelBufferGetHeight(imageBuffer)
+        let bytesPerLine = CVPixelBufferGetBytesPerRow(imageBuffer)
+        let pixels = Data(bytes: baseAddress, count: bytesPerLine * height)
         return TeamTalkDesktopFrame(
             width: Int32(width),
             height: Int32(height),
