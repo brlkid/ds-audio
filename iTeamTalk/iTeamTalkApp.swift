@@ -6,7 +6,7 @@ struct TTCustomApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TTCustomRootView()
+            LiveKitOnlyRootView()
         }
     }
 }

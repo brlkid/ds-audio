@@ -15,8 +15,7 @@
 		254B7A731B99E67400BE0DEF /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 254B7A711B99E67400BE0DEF /* AVFoundation.framework */; };
 		254B7A771B99E68800BE0DEF /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 254B7A751B99E68800BE0DEF /* libstdc++.dylib */; };
 		254B7A791B99E69200BE0DEF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 254B7A781B99E69200BE0DEF /* libz.dylib */; };
-		254B7A7B1B99E77000BE0DEF /* libTeamTalk5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 254B7A7A1B99E77000BE0DEF /* libTeamTalk5.a */; };
-		254B7A852F90210000CD0A01 /* TeamTalkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 254B7A862F90210000CD0A01 /* TeamTalkKit */; };
+		254B7A852F90210000CD0A01 /* LiveKitTransport in Frameworks */ = {isa = PBXBuildFile; productRef = 254B7A862F90210000CD0A01 /* LiveKitTransport */; };
 		25DF9A021C5E00E100469BA8 /* License.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25DF9A011C5E00E100469BA8 /* License.swift */; };
 		598F236865BD42938957BDE2 /* iTeamTalkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F4B78C0EB54A24B439A96D /* iTeamTalkApp.swift */; };
 		9A0000010000000000000001 /* TTCustomMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000002 /* TTCustomMain.swift */; };
@@ -34,6 +33,8 @@
 		9A000001000000000000001B /* TTCustomRouteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A000001000000000000001C /* TTCustomRouteController.swift */; };
 		9A000001000000000000001D /* TTCustomCallCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A000001000000000000001E /* TTCustomCallCoordinator.swift */; };
 		9A0000010000000000000021 /* TTCustomLiveKitAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000022 /* TTCustomLiveKitAuth.swift */; };
+		9A0000010000000000000023 /* LiveKitOnlySession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000024 /* LiveKitOnlySession.swift */; };
+		9A0000010000000000000025 /* LiveKitOnlyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000026 /* LiveKitOnlyViews.swift */; };
 		9A000001000000000000001F /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000020 /* CallKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -80,7 +81,6 @@
 		254B7A711B99E67400BE0DEF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		254B7A751B99E68800BE0DEF /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
 		254B7A781B99E69200BE0DEF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		254B7A7A1B99E77000BE0DEF /* libTeamTalk5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libTeamTalk5.a; path = Vendor/TeamTalkSDK/libTeamTalk5.a; sourceTree = "<group>"; };
 		254BE12324DED8F300244D0C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		254BE12424DED8F500244D0C /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		254C08491C345E3700C98566 /* newuser.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = newuser.mp3; sourceTree = "<group>"; };
@@ -126,6 +126,10 @@
 		9A000001000000000000001C /* TTCustomRouteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomRouteController.swift; sourceTree = "<group>"; };
 		9A000001000000000000001E /* TTCustomCallCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomCallCoordinator.swift; sourceTree = "<group>"; };
 		9A0000010000000000000022 /* TTCustomLiveKitAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomLiveKitAuth.swift; sourceTree = "<group>"; };
+		9A0000010000000000000024 /* LiveKitOnlySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlySession.swift; sourceTree = "<group>"; };
+		9A0000010000000000000026 /* LiveKitOnlyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlyViews.swift; sourceTree = "<group>"; };
+		9A0000010000000000000024 /* LiveKitOnlySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlySession.swift; sourceTree = "<group>"; };
+		9A0000010000000000000026 /* LiveKitOnlyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlyViews.swift; sourceTree = "<group>"; };
 		9A0000010000000000000020 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
 		C4F4B78C0EB54A24B439A96D /* iTeamTalkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iTeamTalkApp.swift; sourceTree = "<group>"; };
 		CC0002000000000000000001 /* AudioCodecModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCodecModel.swift; sourceTree = "<group>"; };
@@ -161,13 +165,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				254B7A7B1B99E77000BE0DEF /* libTeamTalk5.a in Frameworks */,
 				254B7A721B99E67400BE0DEF /* AudioToolbox.framework in Frameworks */,
 				254B7A731B99E67400BE0DEF /* AVFoundation.framework in Frameworks */,
 				9A000001000000000000001F /* CallKit.framework in Frameworks */,
 				254B7A791B99E69200BE0DEF /* libz.dylib in Frameworks */,
 				254B7A771B99E68800BE0DEF /* libstdc++.dylib in Frameworks */,
-				254B7A852F90210000CD0A01 /* TeamTalkKit in Frameworks */,
+				254B7A852F90210000CD0A01 /* LiveKitTransport in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,7 +187,6 @@
 		254B7A3E1B98BAA300BE0DEF = {
 			isa = PBXGroup;
 			children = (
-				254B7A7A1B99E77000BE0DEF /* libTeamTalk5.a */,
 				254B7A781B99E69200BE0DEF /* libz.dylib */,
 				254B7A751B99E68800BE0DEF /* libstdc++.dylib */,
 				254B7A701B99E67400BE0DEF /* AudioToolbox.framework */,
@@ -227,6 +229,8 @@
 				9A000001000000000000001C /* TTCustomRouteController.swift */,
 				9A000001000000000000001E /* TTCustomCallCoordinator.swift */,
 				9A0000010000000000000022 /* TTCustomLiveKitAuth.swift */,
+				9A0000010000000000000024 /* LiveKitOnlySession.swift */,
+				9A0000010000000000000026 /* LiveKitOnlyViews.swift */,
 				254B7A6E1B98C89600BE0DEF /* AppInfo.swift */,
 				25DD929E1BB2FA0E00779988 /* Common.swift */,
 				25DF9A011C5E00E100469BA8 /* License.swift */,
@@ -355,7 +359,7 @@
 			);
 			name = "TT Custom";
 			packageProductDependencies = (
-				254B7A862F90210000CD0A01 /* TeamTalkKit */,
+				254B7A862F90210000CD0A01 /* LiveKitTransport */,
 			);
 			productName = "TT Custom";
 			productReference = 254B7A471B98BAA300BE0DEF /* TT Custom.app */;
@@ -435,7 +439,7 @@
 			);
 			mainGroup = 254B7A3E1B98BAA300BE0DEF;
 			packageReferences = (
-				254B7A872F90210000CD0A01 /* XCLocalSwiftPackageReference "TeamTalkKit" */,
+				254B7A872F90210000CD0A01 /* XCLocalSwiftPackageReference "LiveKitTransport" */,
 			);
 			productRefGroup = 254B7A481B98BAA300BE0DEF /* Products */;
 			projectDirPath = "";
@@ -471,24 +475,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25DF9A021C5E00E100469BA8 /* License.swift in Sources */,
 				254B7A4D1B98BAA300BE0DEF /* AppDelegate.swift in Sources */,
 				598F236865BD42938957BDE2 /* iTeamTalkApp.swift in Sources */,
-				9A0000010000000000000001 /* TTCustomMain.swift in Sources */,
-				9A0000010000000000000003 /* TTCustomAudioCore.swift in Sources */,
-				9A0000010000000000000005 /* TTCustomConnectionPolicy.swift in Sources */,
-				9A0000010000000000000007 /* TTCustomAudioOutput.swift in Sources */,
-				9A0000010000000000000009 /* TTCustomAudioMixer.swift in Sources */,
-				9A000001000000000000000B /* TTCustomConnectionLifecycle.swift in Sources */,
-				9A000001000000000000000F /* TTCustomViews.swift in Sources */,
-				9A0000010000000000000011 /* TTCustomKeychain.swift in Sources */,
-				9A0000010000000000000013 /* TTCustomModels.swift in Sources */,
-				9A0000010000000000000015 /* TTCustomSystemAudioCapture.swift in Sources */,
-				9A0000010000000000000017 /* TTCustomConnectionController.swift in Sources */,
-				9A0000010000000000000019 /* TTCustomAudioController.swift in Sources */,
-				9A000001000000000000001B /* TTCustomRouteController.swift in Sources */,
-				9A000001000000000000001D /* TTCustomCallCoordinator.swift in Sources */,
 				9A0000010000000000000021 /* TTCustomLiveKitAuth.swift in Sources */,
+				9A0000010000000000000023 /* LiveKitOnlySession.swift in Sources */,
+				9A0000010000000000000025 /* LiveKitOnlyViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,10 +685,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					Vendor/TeamTalkSDK/,
-				);
 				MARKETING_VERSION = 5.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom;
 				PRODUCT_NAME = "TT Custom";
@@ -725,10 +712,6 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					Vendor/TeamTalkSDK/,
 				);
 				MARKETING_VERSION = 5.23;
 				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.ttcustom;
@@ -813,17 +796,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		254B7A872F90210000CD0A01 /* XCLocalSwiftPackageReference "TeamTalkKit" */ = {
+		254B7A872F90210000CD0A01 /* XCLocalSwiftPackageReference "LiveKitTransport" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = TeamTalkKit;
+			relativePath = LiveKitTransport;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		254B7A862F90210000CD0A01 /* TeamTalkKit */ = {
+		254B7A862F90210000CD0A01 /* LiveKitTransport */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 254B7A872F90210000CD0A01 /* XCLocalSwiftPackageReference "TeamTalkKit" */;
-			productName = TeamTalkKit;
+			package = 254B7A872F90210000CD0A01 /* XCLocalSwiftPackageReference "LiveKitTransport" */;
+			productName = LiveKitTransport;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
