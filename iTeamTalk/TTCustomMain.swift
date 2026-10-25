@@ -47,8 +47,6 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     // by default can cause iOS to renegotiate an already-running route.
     @Published var systemCallControlsEnabled = UserDefaults.standard.object(forKey: "ttcustom.systemCallControls") as? Bool ?? false
     @Published var sharingSystemAudio = false
-    @Published var includeScreenVideo = UserDefaults.standard.bool(forKey: "ttcustom.includeScreenVideo")
-    @Published var sharingScreenVideo = false
     @Published var systemAudioMuted = false
     @Published var isRecordingChannel = false
     @Published var channelRecordingURL: URL?
@@ -121,8 +119,6 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     // the iPhone receiver/earpiece.
     var hasExplicitOutputSelection = true
     var audioPhase: TTCustomAudioPhase = .idle
-    var desktopFrameInFlight = false
-    var pendingDesktopFrame: TeamTalkDesktopFrame?
     var callCoordinator: TTCustomCallCoordinator!
     nonisolated let messageMailbox = TTCustomMessageMailbox()
 

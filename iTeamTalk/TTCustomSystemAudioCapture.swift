@@ -2,7 +2,6 @@ import AVFoundation
 import Foundation
 import OSLog
 import ScreenCaptureKit
-@preconcurrency import TeamTalkKit
 
 @available(iOS 27.0, *)
 final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver, SCStreamOutput, SCStreamDelegate {
@@ -13,10 +12,8 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     private var picker: SCContentSharingPicker?
     private var acceptingCallbacks = false
     private var capturesMicrophone = false
-    private var capturesVideo = false
     private var audioCallbackCount = 0
     private var microphoneCallbackCount = 0
-    private var lastScreenFrameTime = CMTime.invalid
 
     private func trace(_ message: String) {
         logger.info("\(message, privacy: .public)")
@@ -26,7 +23,6 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     private let microphoneResampler = TTCustomStreamingResampler()
     var onAudio: (([Int16]) -> Void)?
     var onMicrophoneAudio: (([Int16]) -> Void)?
-    var onScreenFrame: ((TeamTalkDesktopFrame) -> Void)?
     var onFailure: ((String) -> Void)?
 
     private var isAcceptingCallbacks: Bool {
@@ -41,10 +37,9 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         stateLock.unlock()
     }
 
-    func presentPicker(capturesMicrophone: Bool = false, capturesVideo: Bool = false) {
+    func presentPicker(capturesMicrophone: Bool = false) {
         trace("presentPicker: configuring system content-sharing picker")
         self.capturesMicrophone = capturesMicrophone
-        self.capturesVideo = capturesVideo
         callbackQueue.async { [weak self] in
             self?.audioResampler.reset()
             self?.microphoneResampler.reset()
@@ -108,18 +103,6 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
             onFailure?("Could not attach system audio capture: \(error.localizedDescription)")
             return
         }
-        if capturesVideo {
-            do {
-                try capture.addStreamOutput(
-                    self,
-                    type: .screen,
-                    sampleHandlerQueue: callbackQueue
-                )
-            } catch {
-                onFailure?("Could not attach screen video capture: \(error.localizedDescription)")
-                return
-            }
-        }
         if capturesMicrophone && filter.isMicrophoneEnabled {
             do {
                 try capture.addStreamOutput(
@@ -177,22 +160,6 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
                 self.trace("microphone callback #\(self.microphoneCallbackCount)")
             }
             resampler = microphoneResampler
-        case .screen:
-            let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-            if timestamp.isValid,
-               lastScreenFrameTime.isValid,
-               CMTimeGetSeconds(timestamp - lastScreenFrameTime) < 0.2 {
-                return
-            }
-            if timestamp.isValid {
-                lastScreenFrameTime = timestamp
-            }
-            guard let frame = desktopFrame(from: sampleBuffer) else {
-                trace("screen frame conversion returned no frame")
-                return
-            }
-            onScreenFrame?(frame)
-            return
         default:
             return
         }
@@ -213,24 +180,6 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         default:
             break
         }
-    }
-
-    private func desktopFrame(from sampleBuffer: CMSampleBuffer) -> TeamTalkDesktopFrame? {
-        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
-        CVPixelBufferLockBaseAddress(imageBuffer, .readOnly)
-        defer { CVPixelBufferUnlockBaseAddress(imageBuffer, .readOnly) }
-        guard let baseAddress = CVPixelBufferGetBaseAddress(imageBuffer) else { return nil }
-
-        let width = CVPixelBufferGetWidth(imageBuffer)
-        let height = CVPixelBufferGetHeight(imageBuffer)
-        let bytesPerLine = CVPixelBufferGetBytesPerRow(imageBuffer)
-        let pixels = Data(bytes: baseAddress, count: bytesPerLine * height)
-        return TeamTalkDesktopFrame(
-            width: Int32(width),
-            height: Int32(height),
-            bytesPerLine: Int32(bytesPerLine),
-            pixels: pixels
-        )
     }
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {

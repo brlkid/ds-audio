@@ -40,20 +40,6 @@ public struct TeamTalkNativeAudioSetupResult: Sendable {
     }
 }
 
-public struct TeamTalkDesktopFrame: Sendable {
-    public let width: Int32
-    public let height: Int32
-    public let bytesPerLine: Int32
-    public let pixels: Data
-
-    public init(width: Int32, height: Int32, bytesPerLine: Int32, pixels: Data) {
-        self.width = width
-        self.height = height
-        self.bytesPerLine = bytesPerLine
-        self.pixels = pixels
-    }
-}
-
 public struct TeamTalkEncryptionConfiguration {
     public var caCertificate: String
     public var certificate: String
@@ -418,31 +404,6 @@ public final class TeamTalkClient: @unchecked Sendable {
     @discardableResult
     public func stopChannelRecording(channelID: Int32) -> Bool {
         withNative { TT_StopRecordingMuxedAudioFileEx($0, channelID) != 0 }
-    }
-
-    /// Sends one RGB32 desktop frame. Callers must wait for the desktop
-    /// transfer event to report zero remaining bytes before sending another.
-    @discardableResult
-    public func sendDesktopFrame(_ frame: TeamTalkDesktopFrame) -> Int32 {
-        withNative { instance in
-            frame.pixels.withUnsafeBytes { rawBuffer in
-                var desktop = DesktopWindow(
-                    nWidth: frame.width,
-                    nHeight: frame.height,
-                    bmpFormat: BMP_RGB32,
-                    nBytesPerLine: frame.bytesPerLine,
-                    nSessionID: 0,
-                    nProtocol: DESKTOPPROTOCOL_ZLIB_1,
-                    frameBuffer: UnsafeMutableRawPointer(mutating: rawBuffer.baseAddress),
-                    nFrameBufferSize: Int32(frame.pixels.count)
-                )
-                return TT_SendDesktopWindow(instance, &desktop, BMP_NONE)
-            }
-        }
-    }
-
-    public func closeDesktopFrameStream() {
-        _ = withNative { TT_CloseDesktopWindow($0) }
     }
 
     @discardableResult

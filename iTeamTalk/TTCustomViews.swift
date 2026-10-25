@@ -19,7 +19,6 @@ struct TTCustomRootView: View {
 
 struct TTCustomServerView: View {
     @ObservedObject var session: TTCustomSession
-    @State private var showingSettings = false
 
     var body: some View {
         Form {
@@ -48,18 +47,6 @@ struct TTCustomServerView: View {
             }
         }
         .navigationTitle("TT Custom")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showingSettings = true } label: {
-                    Image(systemName: "gearshape")
-                }
-                .accessibilityLabel("Settings")
-                .accessibilityHint("Open app settings")
-            }
-        }
-        .sheet(isPresented: $showingSettings) {
-            TTCustomSettingsPane(session: session)
-        }
     }
 }
 
@@ -177,16 +164,6 @@ private struct TTCustomSettingsPane: View {
                         session.disconnect()
                         dismiss()
                     }
-                }
-
-                Section("Screen sharing") {
-                    Toggle("Include screen video", isOn: Binding(
-                        get: { session.includeScreenVideo },
-                        set: { session.setIncludeScreenVideo($0) }
-                    ))
-                    Text("When enabled, screen sharing sends throttled TeamTalk desktop frames in addition to system audio. It applies the next time sharing starts.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
 
                 Section {
