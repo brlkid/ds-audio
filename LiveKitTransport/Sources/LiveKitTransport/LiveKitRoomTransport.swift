@@ -7,6 +7,7 @@ import LiveKit
 @MainActor
 public final class LiveKitRoomTransport: NSObject {
     public let room: Room
+    private var localTracks: [String: LocalAudioTrack] = [:]
 
     public override init() {
         room = Room()
@@ -25,11 +26,53 @@ public final class LiveKitRoomTransport: NSObject {
         try await room.connect(url: url, token: token, connectOptions: options)
     }
 
-    public func setMicrophone(enabled: Bool) async throws {
-        try await room.localParticipant.setMicrophone(enabled: enabled)
+    public func publishMicrophone(enabled: Bool, processing: AudioCaptureOptions = AudioCaptureOptions()) async throws {
+        if let track = localTracks[Track.microphoneName] {
+            enabled ? try await track.unmute() : try await track.mute()
+            return
+        }
+
+        guard enabled else { return }
+        let track = await LocalAudioTrack.createTrack(
+            name: Track.microphoneName,
+            options: processing,
+            reportStatistics: true
+        )
+        _ = try await room.localParticipant.publish(
+            audioTrack: track,
+            options: AudioPublishOptions(
+                name: Track.microphoneName,
+                dtx: true,
+                red: true,
+                streamName: "Microphone"
+            )
+        )
+        localTracks[Track.microphoneName] = track
+    }
+
+    public func setTrackMuted(name: String, muted: Bool) async throws {
+        guard let track = localTracks[name] else { return }
+        muted ? try await track.mute() : try await track.unmute()
+    }
+
+    public func setMicrophoneProcessing(echoCancellation: Bool,
+                                        noiseSuppression: Bool,
+                                        automaticGainControl: Bool) throws {
+        guard let track = localTracks[Track.microphoneName] else { return }
+        _ = try track.setAudioProcessingOptions(AudioProcessingOptions(
+            echoCancellation: echoCancellation,
+            autoGainControl: automaticGainControl,
+            noiseSuppression: noiseSuppression
+        ))
+    }
+
+    public func unpublishAllLocalAudio() async {
+        await room.localParticipant.unpublishAll()
+        localTracks.removeAll()
     }
 
     public func disconnect() async {
+        localTracks.removeAll()
         await room.disconnect()
     }
 }

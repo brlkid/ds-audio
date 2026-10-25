@@ -5,20 +5,37 @@ import SwiftUI
 
 @MainActor
 final class LiveKitOnlySession: ObservableObject {
+    struct AudioSource: Identifiable, Equatable {
+        let id: String
+        let title: String
+        let detail: String
+        var isEnabled: Bool
+        let isAvailable: Bool
+    }
+
     @Published var host = UserDefaults.standard.string(forKey: "ttcustom.livekitURL") ?? "https://derricks-macbook.tail435bed.ts.net"
     @Published var username = UserDefaults.standard.string(forKey: "ttcustom.username") ?? "derrick"
     @Published var password = ""
     @Published var nickname = UserDefaults.standard.string(forKey: "ttcustom.nickname") ?? "derricks-iphone"
+    @Published var roomName = UserDefaults.standard.string(forKey: "ttcustom.room") ?? "main"
     @Published var status = "Not connected"
     @Published var connected = false
     @Published var microphoneEnabled = false
-    @Published var roomName = "main"
     @Published var participantCount = 0
+    @Published var participants: [String] = []
     @Published var inputRoute = "Not active"
     @Published var outputRoute = "Not active"
+    @Published var microphoneLevel = UserDefaults.standard.double(forKey: "ttcustom.micLevel") == 0 ? 1 : UserDefaults.standard.double(forKey: "ttcustom.micLevel")
+    @Published var systemLevel = UserDefaults.standard.double(forKey: "ttcustom.systemLevel") == 0 ? 1 : UserDefaults.standard.double(forKey: "ttcustom.systemLevel")
+    @Published var monitorLevel = UserDefaults.standard.double(forKey: "ttcustom.monitorLevel") == 0 ? 1 : UserDefaults.standard.double(forKey: "ttcustom.monitorLevel")
+    @Published var echoCancellation = true
+    @Published var noiseSuppression = true
+    @Published var automaticGainControl = true
+    @Published var audioStatus = "Microphone track is not published"
 
     let transport = LiveKitRoomTransport()
     private let auth = TTCustomLiveKitAuthClient()
+
     private var participantIdentity: String {
         let key = "ttcustom.livekitParticipantIdentity"
         if let saved = UserDefaults.standard.string(forKey: key) { return saved }
@@ -27,43 +44,36 @@ final class LiveKitOnlySession: ObservableObject {
         return value
     }
 
+    var sources: [AudioSource] {
+        [
+            AudioSource(id: "microphone", title: "Microphone", detail: inputRoute, isEnabled: microphoneEnabled, isAvailable: true),
+            AudioSource(id: "system", title: "System audio", detail: "Capture source not configured", isEnabled: false, isAvailable: false),
+        ]
+    }
+
     func connect() {
-        guard URL(string: host) != nil, host.hasPrefix("http") else {
-            status = "Enter the HTTPS server URL"
-            return
-        }
-        guard !username.isEmpty, !password.isEmpty else {
-            status = "Enter your username and password"
-            return
-        }
+        guard URL(string: host) != nil, host.hasPrefix("http") else { status = "Enter the HTTPS server URL"; return }
+        guard !username.isEmpty, !password.isEmpty else { status = "Enter your username and password"; return }
+        UserDefaults.standard.set(host, forKey: "ttcustom.livekitURL")
+        UserDefaults.standard.set(username, forKey: "ttcustom.username")
+        UserDefaults.standard.set(nickname, forKey: "ttcustom.nickname")
+        UserDefaults.standard.set(roomName, forKey: "ttcustom.room")
         status = "Connecting…"
-        let host = host
-        let username = username
-        let password = password
-        let nickname = nickname
-        let roomName = roomName
+        let host = host, username = username, password = password, nickname = nickname, roomName = roomName
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                let response = try await auth.requestToken(
-                    host: host,
-                    username: username,
-                    password: password,
-                    room: roomName,
-                    participantName: nickname,
-                    participantIdentity: participantIdentity
-                )
+                let response = try await auth.requestToken(host: host, username: username, password: password, room: roomName, participantName: nickname, participantIdentity: participantIdentity)
                 try await transport.connect(url: response.serverURL, token: response.participantToken)
-                try await transport.setMicrophone(enabled: true)
-                self.connected = true
-                self.microphoneEnabled = true
-                self.status = "Connected"
-                self.refreshAudioRoute()
-                self.refreshParticipants()
+                connected = true
+                status = "Connected"
+                refreshAudioRoute()
+                refreshParticipants()
+                try await setMicrophone(enabled: true)
             } catch {
-                self.connected = false
-                self.microphoneEnabled = false
-                self.status = error.localizedDescription
+                connected = false
+                microphoneEnabled = false
+                status = error.localizedDescription
             }
         }
     }
@@ -75,26 +85,54 @@ final class LiveKitOnlySession: ObservableObject {
             connected = false
             microphoneEnabled = false
             participantCount = 0
+            participants = []
+            audioStatus = "Microphone track is not published"
             status = "Not connected"
             refreshAudioRoute()
         }
+    }
+
+    func setMicrophone(enabled: Bool) async throws {
+        try await transport.publishMicrophone(enabled: enabled)
+        microphoneEnabled = enabled
+        audioStatus = enabled ? "Microphone track live" : "Microphone muted"
     }
 
     func toggleMicrophone() {
         let enabled = !microphoneEnabled
         Task { @MainActor [weak self] in
             guard let self else { return }
-            do {
-                try await transport.setMicrophone(enabled: enabled)
-                microphoneEnabled = enabled
-            } catch {
-                status = error.localizedDescription
-            }
+            do { try await setMicrophone(enabled: enabled) }
+            catch { status = error.localizedDescription }
+        }
+    }
+
+    func applyProcessing() {
+        do {
+            try transport.setMicrophoneProcessing(
+                echoCancellation: echoCancellation,
+                noiseSuppression: noiseSuppression,
+                automaticGainControl: automaticGainControl
+            )
+        } catch {
+            status = error.localizedDescription
+        }
+    }
+
+    func setLevel(_ value: Double, key: String) {
+        switch key {
+        case "microphone": microphoneLevel = value; UserDefaults.standard.set(value, forKey: "ttcustom.micLevel")
+        case "system": systemLevel = value; UserDefaults.standard.set(value, forKey: "ttcustom.systemLevel")
+        default: monitorLevel = value; UserDefaults.standard.set(value, forKey: "ttcustom.monitorLevel")
         }
     }
 
     func refreshParticipants() {
-        participantCount = transport.room.remoteParticipants.count + 1
+        participants = transport.room.remoteParticipants.values.map { participant in
+            if let name = participant.name, !name.isEmpty { return name }
+            return String(describing: participant.identity)
+        }.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        participantCount = participants.count + 1
     }
 
     func refreshAudioRoute() {
