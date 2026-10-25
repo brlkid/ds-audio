@@ -143,6 +143,10 @@ public final class TeamTalkClient: @unchecked Sendable {
     /// commands from the UI/audio queues. A dedicated serial executor keeps
     /// native calls ordered without holding a lock while client callbacks run.
     private let nativeQueue = DispatchQueue(label: "com.derrick.teamtalkkit.client-native")
+    // Desktop bitmap compression can take substantially longer than a voice
+    // polling tick. Keep it off nativeQueue so desktop sharing cannot starve
+    // voice input/output event delivery.
+    private let desktopQueue = DispatchQueue(label: "com.derrick.teamtalkkit.client-desktop")
     private var rawAudioBlockHandler: TeamTalkRawAudioBlockHandler?
 
     private init() {}
@@ -424,8 +428,10 @@ public final class TeamTalkClient: @unchecked Sendable {
     /// transfer event to report zero remaining bytes before sending another.
     @discardableResult
     public func sendDesktopFrame(_ frame: TeamTalkDesktopFrame) -> Int32 {
-        withNative { instance in
-            frame.pixels.withUnsafeBytes { rawBuffer in
+        desktopQueue.sync {
+            let instance = stateQueue.sync { self.instance }
+            guard let instance else { return Int32(0) }
+            return frame.pixels.withUnsafeBytes { rawBuffer in
                 var desktop = DesktopWindow(
                     nWidth: frame.width,
                     nHeight: frame.height,
@@ -442,7 +448,10 @@ public final class TeamTalkClient: @unchecked Sendable {
     }
 
     public func closeDesktopFrameStream() {
-        _ = withNative { TT_CloseDesktopWindow($0) }
+        desktopQueue.sync {
+            let instance = stateQueue.sync { self.instance }
+            _ = TT_CloseDesktopWindow(instance)
+        }
     }
 
     @discardableResult
