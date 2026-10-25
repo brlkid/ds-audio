@@ -363,6 +363,38 @@ struct TTCustomAudioControlsTab: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                if session.audioHealth.maximumInputChannelCount > 0 || !session.audioHealth.microphoneSources.isEmpty {
+                    GroupBox {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Microphone capabilities", systemImage: "mic.badge.waveform")
+                                .font(.headline)
+                            if session.audioHealth.maximumInputChannelCount > 0 {
+                                TTCustomStatRow(
+                                    title: "Input channels",
+                                    value: "\(session.audioHealth.inputChannelCount) current / \(session.audioHealth.maximumInputChannelCount) maximum"
+                                )
+                            }
+                            if !session.audioHealth.activeInputDataSourceName.isEmpty {
+                                TTCustomStatRow(title: "Active source", value: session.audioHealth.activeInputDataSourceName)
+                            }
+                            ForEach(session.audioHealth.microphoneSources) { source in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(source.name)
+                                        .font(.subheadline.weight(.medium))
+                                    Text([
+                                        source.supportsStereo ? "Stereo supported" : "Stereo not reported",
+                                        source.supportedPolarPatterns.isEmpty ? nil : "Polar patterns: \(source.supportedPolarPatterns.joined(separator: ", "))",
+                                        source.selectedPolarPattern.map { "Selected: \($0)" }
+                                    ].compactMap { $0 }.joined(separator: " • "))
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                }
+                                .accessibilityElement(children: .combine)
+                                .padding(.vertical, 2)
+                            }
+                        }
+                    }
+                }
             }
             .padding()
         }
@@ -878,11 +910,22 @@ struct TTCustomDevicesTab: View {
                                     .font(.subheadline.weight(.medium))
                                     .accessibilityHidden(true)
                                 Picker("Microphone", selection: Binding(
-                                    get: { session.selectedInputID ?? "" },
-                                    set: { session.selectInput($0) }
+                                    get: {
+                                        guard let input = session.availableInputs.first(where: { $0.id == session.selectedInputID }) else { return "" }
+                                        let source = input.dataSources.first(where: { $0.id == session.selectedInputDataSourceID })
+                                        return session.inputSelectionID(for: input, source: source)
+                                    },
+                                    set: { session.selectInputSelection($0) }
                                 )) {
                                     ForEach(session.availableInputs) { input in
-                                        Text(input.name).tag(input.id)
+                                        if input.dataSources.isEmpty {
+                                            Text(input.name).tag(session.inputSelectionID(for: input, source: nil))
+                                        } else {
+                                            ForEach(input.dataSources) { source in
+                                                Text("\(input.name) — \(source.name)")
+                                                    .tag(session.inputSelectionID(for: input, source: source))
+                                            }
+                                        }
                                     }
                                 }
                                 .pickerStyle(.menu)
@@ -934,11 +977,22 @@ private struct TTCustomDevicesControls: View {
                             .font(.subheadline.weight(.medium))
                             .accessibilityHidden(true)
                         Picker("Microphone", selection: Binding(
-                            get: { session.selectedInputID ?? "" },
-                            set: { session.selectInput($0) }
+                            get: {
+                                guard let input = session.availableInputs.first(where: { $0.id == session.selectedInputID }) else { return "" }
+                                let source = input.dataSources.first(where: { $0.id == session.selectedInputDataSourceID })
+                                return session.inputSelectionID(for: input, source: source)
+                            },
+                            set: { session.selectInputSelection($0) }
                         )) {
                             ForEach(session.availableInputs) { input in
-                                Text(input.name).tag(input.id)
+                                if input.dataSources.isEmpty {
+                                    Text(input.name).tag(session.inputSelectionID(for: input, source: nil))
+                                } else {
+                                    ForEach(input.dataSources) { source in
+                                        Text("\(input.name) — \(source.name)")
+                                            .tag(session.inputSelectionID(for: input, source: source))
+                                    }
+                                }
                             }
                         }
                         .pickerStyle(.menu)

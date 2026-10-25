@@ -1,10 +1,16 @@
 import AVFoundation
 @preconcurrency import TeamTalkKit
 
+struct TTCustomInputSource: Hashable, Identifiable {
+    let id: Int
+    let name: String
+}
+
 struct TTCustomInput: Identifiable, Hashable {
     let id: String
     let name: String
     let port: AVAudioSession.Port
+    let dataSources: [TTCustomInputSource]
 }
 
 struct TTCustomOutput: Identifiable, Hashable {

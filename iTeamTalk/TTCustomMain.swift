@@ -79,6 +79,7 @@ final class TTCustomSession: NSObject, ObservableObject, TeamTalkMessageObserver
     @Published var serverChannels: [Channel] = []
     @Published var channelActionStatus = ""
     @Published var selectedInputID: String? = UserDefaults.standard.string(forKey: "ttcustom.inputID")
+    @Published var selectedInputDataSourceID: Int? = UserDefaults.standard.object(forKey: "ttcustom.inputDataSourceID") as? Int
     @Published var selectedOutputID = UserDefaults.standard.string(forKey: "ttcustom.outputID") ?? "speaker"
     @Published var actualOutputID: String?
     @Published var latencyPreset: TTCustomLatencyPreset = TTCustomLatencyPreset(rawValue: UserDefaults.standard.string(forKey: "ttcustom.latencyPreset") ?? "balanced") ?? .balanced

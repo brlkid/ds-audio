@@ -5,14 +5,34 @@ import Foundation
 extension TTCustomSession {
 func refreshRoutes() {
         let session = AVAudioSession.sharedInstance()
-        availableInputs = (session.availableInputs ?? []).map {
-            TTCustomInput(id: $0.uid, name: $0.portName, port: $0.portType)
+        let activeInputs = session.currentRoute.inputs
+        availableInputs = (session.availableInputs ?? []).map { input in
+            let activeInput = activeInputs.first(where: { $0.uid == input.uid })
+            let sources = input.dataSources ?? activeInput?.dataSources ?? []
+            return TTCustomInput(
+                id: input.uid,
+                name: input.portName,
+                port: input.portType,
+                dataSources: sources.map {
+                    TTCustomInputSource(id: $0.dataSourceID.intValue, name: $0.dataSourceName)
+                }
+            )
         }
         if selectedInputID == nil {
             selectedInputID = session.preferredInput?.uid ?? availableInputs.first?.id
         }
         if let selectedInputID, !availableInputs.contains(where: { $0.id == selectedInputID }) {
             self.selectedInputID = session.preferredInput?.uid ?? availableInputs.first?.id
+        }
+        if let selectedInputID,
+           let input = availableInputs.first(where: { $0.id == selectedInputID }) {
+            if let activeSourceID = session.inputDataSource?.dataSourceID.intValue,
+               input.dataSources.contains(where: { $0.id == activeSourceID }) {
+                selectedInputDataSourceID = activeSourceID
+            } else if let selectedInputDataSourceID,
+                      !input.dataSources.contains(where: { $0.id == selectedInputDataSourceID }) {
+                self.selectedInputDataSourceID = nil
+            }
         }
 
         // The receiver is an AVAudioSession override rather than a normal
@@ -50,8 +70,30 @@ func refreshRoutes() {
     }
 
     func selectInput(_ inputID: String?) {
+        selectInput(inputID, dataSourceID: nil)
+    }
+
+    func inputSelectionID(for input: TTCustomInput, source: TTCustomInputSource?) -> String {
+        guard let source else { return input.id }
+        return "\(input.id)|\(source.id)"
+    }
+
+    func selectInputSelection(_ selectionID: String) {
+        let parts = selectionID.split(separator: "|", maxSplits: 1).map(String.init)
+        guard let inputID = parts.first else { return }
+        let sourceID = parts.count == 2 ? Int(parts[1]) : nil
+        selectInput(inputID, dataSourceID: sourceID)
+    }
+
+    private func selectInput(_ inputID: String?, dataSourceID: Int?) {
         selectedInputID = inputID
+        selectedInputDataSourceID = dataSourceID
         UserDefaults.standard.set(inputID, forKey: "ttcustom.inputID")
+        if let dataSourceID {
+            UserDefaults.standard.set(dataSourceID, forKey: "ttcustom.inputDataSourceID")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "ttcustom.inputDataSourceID")
+        }
         let session = AVAudioSession.sharedInstance()
         guard let inputID, let input = session.availableInputs?.first(where: { $0.uid == inputID }) else { return }
         do {
@@ -59,6 +101,14 @@ func refreshRoutes() {
                 try session.setActive(true)
             }
             try session.setPreferredInput(input)
+            let availableDataSources = input.dataSources
+                ?? session.currentRoute.inputs.first(where: { $0.uid == input.uid })?.dataSources
+                ?? []
+            if let dataSourceID,
+               let dataSource = availableDataSources.first(where: { $0.dataSourceID.intValue == dataSourceID }) {
+                try input.setPreferredDataSource(dataSource)
+                try session.setInputDataSource(dataSource)
+            }
             if connected { applySelectedAudioRoute() }
         } catch {
             status = "Could not select microphone: \(error.localizedDescription)"
@@ -173,6 +223,14 @@ func deactivateAudioSession() {
             if let inputID = selectedInputID,
                let input = session.availableInputs?.first(where: { $0.uid == inputID }) {
                 try session.setPreferredInput(input)
+                let availableDataSources = input.dataSources
+                    ?? session.currentRoute.inputs.first(where: { $0.uid == input.uid })?.dataSources
+                    ?? []
+                if let dataSourceID = selectedInputDataSourceID,
+                   let dataSource = availableDataSources.first(where: { $0.dataSourceID.intValue == dataSourceID }) {
+                    try input.setPreferredDataSource(dataSource)
+                    try session.setInputDataSource(dataSource)
+                }
             }
             // .none means the normal route. With no external route connected,
             // that is the receiver; .speaker is the explicit speaker override.

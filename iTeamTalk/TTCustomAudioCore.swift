@@ -336,11 +336,29 @@ enum TTCustomAppleAudioPipelineError: LocalizedError {
     }
 }
 
+struct TTCustomMicrophoneSourceHealth: Equatable, Identifiable {
+    let id: Int
+    let name: String
+    let location: String?
+    let orientation: String?
+    let supportedPolarPatterns: [String]
+    let selectedPolarPattern: String?
+    let isSelected: Bool
+
+    var supportsStereo: Bool {
+        supportedPolarPatterns.contains { $0.caseInsensitiveCompare("stereo") == .orderedSame }
+    }
+}
+
 struct TTCustomAudioHealth: Equatable {
     var sampleRate = 0.0
     var bufferDuration = 0.0
     var inputRoute = "—"
     var outputRoute = "—"
+    var inputChannelCount = 0
+    var maximumInputChannelCount = 0
+    var activeInputDataSourceName = ""
+    var microphoneSources: [TTCustomMicrophoneSourceHealth] = []
     var mixerStats = TTCustomMixerStats()
 }
 

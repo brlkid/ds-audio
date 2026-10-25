@@ -133,6 +133,26 @@ func connect() {
             ? "\(network.soundInputDelayMilliseconds) ms"
             : "Not measured"
         let mixerState = mixer.active ? "Active" : "Inactive (system sharing is off)"
+        let microphoneCapabilityLines: String = {
+            var lines: [String] = []
+            if audio.maximumInputChannelCount > 0 {
+                lines.append("Input channels: \(audio.inputChannelCount)/\(audio.maximumInputChannelCount) current/max")
+            }
+            if !audio.activeInputDataSourceName.isEmpty {
+                lines.append("Active microphone source: \(audio.activeInputDataSourceName)")
+            }
+            for source in audio.microphoneSources {
+                var details = [source.supportsStereo ? "stereo supported" : "stereo not reported"]
+                if !source.supportedPolarPatterns.isEmpty {
+                    details.append("polar patterns: \(source.supportedPolarPatterns.joined(separator: ", "))")
+                }
+                if let selected = source.selectedPolarPattern, !selected.isEmpty {
+                    details.append("selected: \(selected)")
+                }
+                lines.append("\(source.name): \(details.joined(separator: "; "))")
+            }
+            return lines.joined(separator: "\n")
+        }()
         let remoteUserLines = remoteUsers.map { user in
             let loss = user.voicePacketsReceived + user.voicePacketsLost > 0
                 ? String(format: "%.1f%%", user.voicePacketLossPercent)
@@ -163,6 +183,10 @@ func connect() {
         Apple voice processing: \(echoCancellation)
         WebRTC echo cancellation: \(webrtcEchoCancellation)
         Automatic gain control: \(automaticGainControl)
+
+        Microphone capabilities
+        ------------------------
+        \(microphoneCapabilityLines)
 
         Network
         -------

@@ -135,11 +135,37 @@ func setTransmit(_ enabled: Bool) {
 
     func refreshAudioStats() {
         let session = AVAudioSession.sharedInstance()
+        let route = session.currentRoute
+        let inputPort = route.inputs.first
+            ?? session.availableInputs?.first(where: { $0.portType == .builtInMic })
+        let selectedSourceID = session.inputDataSource?.dataSourceID.intValue
+        let readablePolarPattern: (AVAudioSession.PolarPattern) -> String = { pattern in
+            let description = String(describing: pattern)
+            let prefix = "AVAudioSessionPolarPattern(_rawValue: "
+            return description.hasPrefix(prefix)
+                ? String(description.dropFirst(prefix.count).dropLast())
+                : description
+        }
+        let microphoneSources = (inputPort?.dataSources ?? []).map { source in
+            TTCustomMicrophoneSourceHealth(
+                id: source.dataSourceID.intValue,
+                name: source.dataSourceName,
+                location: source.location.map { String(describing: $0) },
+                orientation: source.orientation.map { String(describing: $0) },
+                supportedPolarPatterns: (source.supportedPolarPatterns ?? []).map(readablePolarPattern),
+                selectedPolarPattern: source.selectedPolarPattern.map(readablePolarPattern),
+                isSelected: selectedSourceID == source.dataSourceID.intValue
+            )
+        }
         let localAudioHealth = TTCustomAudioHealth(
             sampleRate: session.sampleRate,
             bufferDuration: session.ioBufferDuration,
-            inputRoute: session.currentRoute.inputs.first?.portName ?? "No input",
-            outputRoute: session.currentRoute.outputs.first?.portName ?? "No output",
+            inputRoute: route.inputs.first?.portName ?? "No input",
+            outputRoute: route.outputs.first?.portName ?? "No output",
+            inputChannelCount: session.inputNumberOfChannels,
+            maximumInputChannelCount: session.maximumInputNumberOfChannels,
+            activeInputDataSourceName: session.inputDataSource?.dataSourceName ?? "",
+            microphoneSources: microphoneSources,
             mixerStats: audioMixer?.snapshot() ?? TTCustomMixerStats()
         )
         if audioHealth != localAudioHealth {
@@ -443,6 +469,11 @@ func setTransmit(_ enabled: Bool) {
                 self.audioPhase = .idle
                 return
             }
+            // iOS may populate built-in microphone data sources only after
+            // the play-and-record session is active. Refresh the picker after
+            // activation so Front/Back/Bottom are not lost behind the parent
+            // "iPhone Microphone" port.
+            self.refreshRoutes()
             self.scheduleSpeakerRouteEnforcement()
             for user in client.channelUsers(id: client.myChannelID) {
                 self.addRemoteUser(user)
