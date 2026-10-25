@@ -32,6 +32,8 @@ final class LiveKitOnlySession: ObservableObject {
     @Published var noiseSuppression = true
     @Published var automaticGainControl = true
     @Published var audioStatus = "Microphone track is not published"
+    @Published var sharingSystemAudio = false
+    @Published var systemAudioMuted = false
 
     let transport = LiveKitRoomTransport()
     private let auth = TTCustomLiveKitAuthClient()
@@ -47,8 +49,13 @@ final class LiveKitOnlySession: ObservableObject {
     var sources: [AudioSource] {
         [
             AudioSource(id: "microphone", title: "Microphone", detail: inputRoute, isEnabled: microphoneEnabled, isAvailable: true),
-            AudioSource(id: "system", title: "System audio", detail: "Capture source not configured", isEnabled: false, isAvailable: false),
+            AudioSource(id: "system", title: "System audio", detail: sharingSystemAudio ? "Screen/audio capture" : "Not sharing", isEnabled: sharingSystemAudio && !systemAudioMuted, isAvailable: systemAudioAvailable),
         ]
+    }
+
+    var systemAudioAvailable: Bool {
+        if #available(iOS 27.0, *) { return true }
+        return false
     }
 
     func connect() {
@@ -87,6 +94,7 @@ final class LiveKitOnlySession: ObservableObject {
             participantCount = 0
             participants = []
             audioStatus = "Microphone track is not published"
+            sharingSystemAudio = false
             status = "Not connected"
             refreshAudioRoute()
         }
@@ -117,6 +125,56 @@ final class LiveKitOnlySession: ObservableObject {
         } catch {
             status = error.localizedDescription
         }
+    }
+
+    func toggleSystemAudio() {
+        if sharingSystemAudio {
+            stopSystemAudioSharing()
+        } else {
+            startSystemAudioSharing()
+        }
+    }
+
+    func setSystemAudioMuted(_ muted: Bool) {
+        systemAudioMuted = muted
+    }
+
+    @available(iOS 27.0, *)
+    private func startSystemAudioSharingOnSupportedOS() {
+        let capture = TTCustomSystemAudioCapture()
+        capture.onAudio = { [weak self] samples in
+            guard let self else { return }
+            self.transport.captureSystemAudio(samples: samples, gain: self.systemAudioMuted ? 0 : self.systemLevel)
+        }
+        capture.onFailure = { [weak self] message in
+            Task { @MainActor in
+                self?.sharingSystemAudio = false
+                self?.status = message
+            }
+        }
+        capture.presentPicker()
+        systemAudioCapture = capture
+        sharingSystemAudio = true
+        audioStatus = "Microphone and system audio are mixed into one LiveKit stream"
+    }
+
+    private var systemAudioCapture: AnyObject?
+
+    private func startSystemAudioSharing() {
+        guard systemAudioAvailable else {
+            status = "System audio capture requires iOS 27 or later"
+            return
+        }
+        if #available(iOS 27.0, *) { startSystemAudioSharingOnSupportedOS() }
+    }
+
+    private func stopSystemAudioSharing() {
+        if #available(iOS 27.0, *), let capture = systemAudioCapture as? TTCustomSystemAudioCapture {
+            capture.stop()
+        }
+        systemAudioCapture = nil
+        sharingSystemAudio = false
+        audioStatus = microphoneEnabled ? "Microphone track live" : "Microphone track is not published"
     }
 
     func setLevel(_ value: Double, key: String) {

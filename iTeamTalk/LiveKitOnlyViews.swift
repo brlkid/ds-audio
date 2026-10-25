@@ -93,7 +93,13 @@ private struct AudioTab: View {
                             Text(source.detail).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        if source.isAvailable {
+                        if source.id == "system" && source.isAvailable {
+                            Button(session.sharingSystemAudio ? (session.systemAudioMuted ? "Unmute" : "Mute") : "Share") {
+                                if session.sharingSystemAudio { session.setSystemAudioMuted(!session.systemAudioMuted) }
+                                else { session.toggleSystemAudio() }
+                            }
+                            .buttonStyle(.bordered)
+                        } else if source.isAvailable {
                             Image(systemName: source.isEnabled ? "checkmark.circle.fill" : "circle")
                                 .foregroundStyle(source.isEnabled ? .green : .secondary)
                                 .accessibilityLabel(source.isEnabled ? "Enabled" : "Muted")
@@ -107,7 +113,7 @@ private struct AudioTab: View {
                 AudioLevelRow(title: "Microphone", value: Binding(get: { session.microphoneLevel }, set: { session.setLevel($0, key: "microphone") }))
                 AudioLevelRow(title: "System audio", value: Binding(get: { session.systemLevel }, set: { session.setLevel($0, key: "system") }))
                 AudioLevelRow(title: "What you hear", value: Binding(get: { session.monitorLevel }, set: { session.setLevel($0, key: "monitor") }))
-                Text("The controls are persisted on this device. System audio remains unavailable until a real capture source is added.")
+                Text("Microphone and captured system audio are mixed locally into one outgoing LiveKit stream. The controls are persisted on this device.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Voice processing") {

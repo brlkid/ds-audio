@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import LiveKit
 
 /// Small, UI-agnostic LiveKit transport used by TT Custom during the backend
@@ -64,6 +65,22 @@ public final class LiveKitRoomTransport: NSObject {
             autoGainControl: automaticGainControl,
             noiseSuppression: noiseSuppression
         ))
+    }
+
+    /// Injects already-mixed app audio into LiveKit's active microphone path.
+    /// This intentionally produces one outgoing program stream rather than a
+    /// second publication, so existing receivers remain compatible.
+    public func captureSystemAudio(samples: [Int16], gain: Double) {
+        guard !samples.isEmpty else { return }
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1),
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count)),
+              let channel = buffer.floatChannelData?[0] else { return }
+        buffer.frameLength = AVAudioFrameCount(samples.count)
+        let scale = Float(max(0, gain)) / Float(Int16.max)
+        for index in samples.indices {
+            channel[index] = Float(samples[index]) * scale
+        }
+        AudioManager.shared.mixer.capture(appAudio: buffer)
     }
 
     public func unpublishAllLocalAudio() async {
