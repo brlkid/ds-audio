@@ -70,6 +70,14 @@ func setTransmit(_ enabled: Bool) {
         }
     }
 
+    func setIncludeScreenVideo(_ enabled: Bool) {
+        includeScreenVideo = enabled
+        UserDefaults.standard.set(enabled, forKey: "ttcustom.includeScreenVideo")
+        status = enabled
+            ? "Screen video enabled for the next share"
+            : "Screen video disabled for the next share"
+    }
+
     func setSystemAudioMuted(_ muted: Bool) {
         guard sharingSystemAudio else { return }
         systemAudioMuted = muted
@@ -258,6 +266,11 @@ func setTransmit(_ enabled: Bool) {
         capture.onAudio = { [weak mixer] samples in
             mixer?.appendSystemAudio(samples)
         }
+        capture.onScreenFrame = { [weak self] frame in
+            Task { @MainActor [weak self] in
+                self?.enqueueDesktopFrame(frame)
+            }
+        }
         capture.onFailure = { [weak self] message in
             Task { @MainActor [weak self] in
                 self?.stopSystemAudioSharing(reconfigure: true)
@@ -267,9 +280,14 @@ func setTransmit(_ enabled: Bool) {
         audioMixer = mixer
         systemAudioCapture = capture
         sharingSystemAudio = true
+        sharingScreenVideo = includeScreenVideo
+        desktopFrameInFlight = false
+        pendingDesktopFrame = nil
         audioPhase = .sharing
-        status = "Choose an app or display to share system audio"
-        capture.presentPicker(capturesMicrophone: false)
+        status = includeScreenVideo
+            ? "Choose an app or display to share audio and video"
+            : "Choose an app or display to share system audio"
+        capture.presentPicker(capturesMicrophone: false, capturesVideo: includeScreenVideo)
     }
 
     func stopSystemAudioSharing(reconfigure: Bool, completion: (() -> Void)? = nil) {
@@ -292,13 +310,49 @@ func setTransmit(_ enabled: Bool) {
         systemAudioCapture = nil
         audioMixer?.stop()
         audioMixer = nil
+        pendingDesktopFrame = nil
+        desktopFrameInFlight = false
+        if sharingScreenVideo {
+            client.closeDesktopFrameStream()
+        }
         sharingSystemAudio = false
+        sharingScreenVideo = false
         audioPhase = .idle
         systemAudioMuted = false
         if reconfigure, connected {
             configureAudio()
         }
         completion?()
+    }
+
+    private func enqueueDesktopFrame(_ frame: TeamTalkDesktopFrame) {
+        guard sharingSystemAudio, sharingScreenVideo else { return }
+        // Keep only the newest frame while TeamTalk is transmitting. This
+        // bounds memory and latency instead of allowing a stale frame queue.
+        guard !desktopFrameInFlight else {
+            pendingDesktopFrame = frame
+            return
+        }
+        sendDesktopFrame(frame)
+    }
+
+    private func sendDesktopFrame(_ frame: TeamTalkDesktopFrame) {
+        guard sharingSystemAudio, sharingScreenVideo else { return }
+        let result = client.sendDesktopFrame(frame)
+        guard result > 0 else {
+            desktopFrameInFlight = false
+            return
+        }
+        desktopFrameInFlight = true
+    }
+
+    func handleDesktopTransfer(bytesRemaining: Int32) {
+        guard sharingScreenVideo, desktopFrameInFlight, bytesRemaining == 0 else { return }
+        desktopFrameInFlight = false
+        if let pendingDesktopFrame {
+            self.pendingDesktopFrame = nil
+            sendDesktopFrame(pendingDesktopFrame)
+        }
     }
 
     func setEchoCancellation(_ enabled: Bool) {

@@ -212,7 +212,8 @@ func connect() {
              CLIENTEVENT_CMD_USER_JOINED,
              CLIENTEVENT_CMD_USER_LEFT,
              CLIENTEVENT_CMD_PROCESSING,
-             CLIENTEVENT_CMD_ERROR:
+             CLIENTEVENT_CMD_ERROR,
+             CLIENTEVENT_DESKTOPWINDOW_TRANSFER:
             break
         default:
             return
@@ -361,6 +362,8 @@ func connect() {
             } else {
                 status = "Server error: \(TeamTalkString.clientError(error))"
             }
+        case CLIENTEVENT_DESKTOPWINDOW_TRANSFER:
+            handleDesktopTransfer(bytesRemaining: message.nBytesRemain)
         default:
             break
         }
