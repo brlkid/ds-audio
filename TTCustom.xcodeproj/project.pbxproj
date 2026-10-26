@@ -38,6 +38,10 @@
 		9A0000010000000000000027 /* TTCustomAudioResampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000028 /* TTCustomAudioResampler.swift */; };
 		9A0000010000000000000029 /* TTCustomSystemAudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000016 /* TTCustomSystemAudioCapture.swift */; };
 		9A000001000000000000002A /* DSAudioCallCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A000001000000000000002B /* DSAudioCallCoordinator.swift */; };
+		9B0000010000000000000001 /* TTCustomReplayKitBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000002 /* TTCustomReplayKitBridge.swift */; };
+		9B0000010000000000000003 /* BroadcastSampleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000004 /* BroadcastSampleHandler.swift */; };
+		9B0000010000000000000005 /* BroadcastInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000006 /* BroadcastInfo.plist */; };
+		9B0000010000000000000007 /* DSAudioBroadcast.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9B0000010000000000000008 /* DSAudioBroadcast.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9A000001000000000000001F /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A0000010000000000000020 /* CallKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -133,6 +137,10 @@
 		9A0000010000000000000026 /* LiveKitOnlyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlyViews.swift; sourceTree = "<group>"; };
 		9A0000010000000000000028 /* TTCustomAudioResampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomAudioResampler.swift; sourceTree = "<group>"; };
 		9A000001000000000000002B /* DSAudioCallCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSAudioCallCoordinator.swift; sourceTree = "<group>"; };
+		9B0000010000000000000002 /* TTCustomReplayKitBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTCustomReplayKitBridge.swift; sourceTree = "<group>"; };
+		9B0000010000000000000004 /* BroadcastSampleHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BroadcastSampleHandler.swift; sourceTree = "<group>"; };
+		9B0000010000000000000006 /* BroadcastInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9B0000010000000000000008 /* DSAudioBroadcast.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DSAudioBroadcast.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A0000010000000000000024 /* LiveKitOnlySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlySession.swift; sourceTree = "<group>"; };
 		9A0000010000000000000026 /* LiveKitOnlyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitOnlyViews.swift; sourceTree = "<group>"; };
 		9A0000010000000000000020 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
@@ -186,6 +194,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9B0000010000000000000009 /* DSAudio Broadcast Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -219,34 +234,13 @@
 				253713391BC97D1200A7ADB3 /* Settings.bundle */,
 				254B7A4C1B98BAA300BE0DEF /* AppDelegate.swift */,
 				C4F4B78C0EB54A24B439A96D /* iTeamTalkApp.swift */,
-				9A0000010000000000000002 /* TTCustomMain.swift */,
-				9A0000010000000000000004 /* TTCustomAudioCore.swift */,
-				9A0000010000000000000006 /* TTCustomConnectionPolicy.swift */,
-				9A0000010000000000000008 /* TTCustomAudioOutput.swift */,
-				9A000001000000000000000A /* TTCustomAudioMixer.swift */,
-				9A000001000000000000000C /* TTCustomConnectionLifecycle.swift */,
-				9A0000010000000000000010 /* TTCustomViews.swift */,
 				9A0000010000000000000012 /* TTCustomKeychain.swift */,
-				9A0000010000000000000014 /* TTCustomModels.swift */,
 				9A0000010000000000000016 /* TTCustomSystemAudioCapture.swift */,
-				9A0000010000000000000018 /* TTCustomConnectionController.swift */,
-				9A000001000000000000001A /* TTCustomAudioController.swift */,
-				9A000001000000000000001C /* TTCustomRouteController.swift */,
-				9A000001000000000000001E /* TTCustomCallCoordinator.swift */,
 				9A0000010000000000000022 /* TTCustomLiveKitAuth.swift */,
 				9A0000010000000000000024 /* LiveKitOnlySession.swift */,
 				9A0000010000000000000026 /* LiveKitOnlyViews.swift */,
 				9A0000010000000000000028 /* TTCustomAudioResampler.swift */,
 				9A000001000000000000002B /* DSAudioCallCoordinator.swift */,
-				254B7A6E1B98C89600BE0DEF /* AppInfo.swift */,
-				25DD929E1BB2FA0E00779988 /* Common.swift */,
-				25DF9A011C5E00E100469BA8 /* License.swift */,
-				2597EF83275EA20300FCEE28 /* UtilSound.swift */,
-				25FFC2DA25ABA07E000334DC /* UtilTT.swift */,
-				2597EF85275EA29D00FCEE28 /* UtilTTS.swift */,
-				2516CB6B1BA8818B00EF9A17 /* UtilUI.swift */,
-				CC000001000000000000000001 /* Models */,
-				CC000001000000000000000002 /* Views */,
 				254B7A531B98BAA300BE0DEF /* Images.xcassets */,
 				254B7A551B98BAA300BE0DEF /* LaunchScreen.xib */,
 				259B12F71C4182E7008A355E /* Localizable.strings */,
@@ -307,46 +301,6 @@
 				251997F91EBA5FEF003C94B1 /* voiceact_on.mp3 */,
 			);
 			name = Sounds;
-			sourceTree = "<group>";
-		};
-		CC000001000000000000000001 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				CC0002000000000000000001 /* AudioCodecModel.swift */,
-				CC0002000000000000000002 /* ChannelDetailModel.swift */,
-				CC0002000000000000000003 /* ChannelListModel.swift */,
-				CC0002000000000000000004 /* MainTabModel.swift */,
-				CC0002000000000000000005 /* PreferencesModel.swift */,
-				CC0002000000000000000006 /* ServerDetailModel.swift */,
-				CC0002000000000000000007 /* ServerListModel.swift */,
-				CC0002000000000000000008 /* SoundDevicesModel.swift */,
-				CC0002000000000000000009 /* TextMessageModel.swift */,
-				CC000200000000000000000A /* UserDetailModel.swift */,
-				CC000200000000000000000B /* WebLoginModel.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		CC000001000000000000000002 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				CC0004000000000000000001 /* AudioCodecView.swift */,
-				CC0004000000000000000002 /* ChannelDetailView.swift */,
-				CC0004000000000000000003 /* ChannelListView.swift */,
-				CC0004000000000000000004 /* MainTabView.swift */,
-				CC0004000000000000000005 /* PreferencesView.swift */,
-				CC0004000000000000000006 /* PublicServerView.swift */,
-				CC0004000000000000000007 /* ServerDetailView.swift */,
-				CC0004000000000000000008 /* ServerListView.swift */,
-				CC0004000000000000000009 /* SoundDevicesView.swift */,
-				CC000400000000000000000A /* SoundEventsView.swift */,
-				CC000400000000000000000B /* SpeechListView.swift */,
-				CC000400000000000000000D /* TextMessageView.swift */,
-				CC000400000000000000000E /* TextToSpeechEventsView.swift */,
-				CC000400000000000000000F /* UserDetailView.swift */,
-				CC0004000000000000000010 /* WebLoginView.swift */,
-			);
-			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -774,6 +728,38 @@
 			};
 			name = Release;
 		};
+		9B000001000000000000000F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = 32VDVGCH4Y;
+				INFOPLIST_FILE = ReplayKitAudio/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 5.23;
+				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.dsaudio.broadcast;
+				PRODUCT_NAME = "D's Audio Broadcast";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9B0000010000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = 32VDVGCH4Y;
+				INFOPLIST_FILE = ReplayKitAudio/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 5.23;
+				PRODUCT_BUNDLE_IDENTIFIER = com.derrick.dsaudio.broadcast;
+				PRODUCT_NAME = "D's Audio Broadcast";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -800,6 +786,15 @@
 			buildConfigurations = (
 				254B7A6A1B98BAA400BE0DEF /* Debug */,
 				254B7A6B1B98BAA400BE0DEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9B000001000000000000000E /* Build configuration list for DSAudioBroadcast */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B000001000000000000000F /* Debug */,
+				9B0000010000000000000011 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

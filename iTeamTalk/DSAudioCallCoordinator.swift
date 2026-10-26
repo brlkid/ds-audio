@@ -7,6 +7,7 @@ final class DSAudioCallCoordinator: NSObject, CXProviderDelegate {
     private let controller = CXCallController()
     private var callUUID: UUID?
     private var endingFromApp = false
+    private var audioActivationHandler: (() -> Void)?
 
     var onMuteChanged: ((Bool) -> Void)?
     var onEnded: (() -> Void)?
@@ -25,8 +26,9 @@ final class DSAudioCallCoordinator: NSObject, CXProviderDelegate {
 
     var isActive: Bool { callUUID != nil }
 
-    func begin(roomName: String) {
+    func begin(roomName: String, onAudioActivated: @escaping () -> Void = {}) {
         guard callUUID == nil else { return }
+        audioActivationHandler = onAudioActivated
         let uuid = UUID()
         callUUID = uuid
         let action = CXStartCallAction(call: uuid, handle: CXHandle(type: .generic, value: roomName))
@@ -36,6 +38,7 @@ final class DSAudioCallCoordinator: NSObject, CXProviderDelegate {
                 guard self.callUUID == uuid else { return }
                 if error != nil {
                     self.callUUID = nil
+                    self.audioActivationHandler = nil
                     self.onEnded?()
                     return
                 }
@@ -52,6 +55,7 @@ final class DSAudioCallCoordinator: NSObject, CXProviderDelegate {
 
     func endFromApp() {
         guard let uuid = callUUID else { return }
+        audioActivationHandler = nil
         endingFromApp = true
         controller.request(CXTransaction(action: CXEndCallAction(call: uuid))) { [weak self] error in
             guard let self else { return }
@@ -66,13 +70,16 @@ final class DSAudioCallCoordinator: NSObject, CXProviderDelegate {
     func providerDidReset(_ provider: CXProvider) {
         callUUID = nil
         endingFromApp = false
+        audioActivationHandler = nil
     }
 
     func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP, .allowBluetoothA2DP])
-            action.fulfill()
-        } catch { action.fail() }
+        // CallKit owns the transaction, but LiveKit owns AVAudioSession and
+        // its audio engine. Configuring AVAudioSession here races LiveKit's
+        // AudioManager and can leave both capture and playout silent after
+        // the call-control UI is enabled. The session is reasserted from
+        // didActivate, after CallKit has finished its transition.
+        action.fulfill()
     }
 
     func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
@@ -91,6 +98,9 @@ final class DSAudioCallCoordinator: NSObject, CXProviderDelegate {
     func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
         guard let uuid = callUUID else { return }
         provider.reportOutgoingCall(with: uuid, connectedAt: Date())
+        let handler = audioActivationHandler
+        audioActivationHandler = nil
+        handler?()
     }
 
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {}

@@ -12,6 +12,9 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     private var picker: SCContentSharingPicker?
     private var acceptingCallbacks = false
     private var capturesMicrophone = false
+    private var lastFilter: SCContentFilter?
+    private var restartAttempts = 0
+    private var restartWorkItem: DispatchWorkItem?
     private var audioCallbackCount = 0
     private var microphoneCallbackCount = 0
 
@@ -23,6 +26,7 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     private let microphoneResampler = TTCustomStreamingResampler()
     var onAudio: (([Int16]) -> Void)?
     var onMicrophoneAudio: (([Int16]) -> Void)?
+    var onStarted: (() -> Void)?
     var onFailure: ((String) -> Void)?
 
     private var isAcceptingCallbacks: Bool {
@@ -46,6 +50,8 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
             self?.audioCallbackCount = 0
             self?.microphoneCallbackCount = 0
         }
+        restartAttempts = 0
+        restartWorkItem?.cancel()
         setAcceptingCallbacks(true)
         let picker = SCContentSharingPicker.shared
         var configuration = SCContentSharingPickerConfiguration()
@@ -63,6 +69,9 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         picker?.remove(self)
         picker?.isActive = false
         picker = nil
+        restartWorkItem?.cancel()
+        restartWorkItem = nil
+        lastFilter = nil
         guard let stream else {
             completion()
             return
@@ -75,6 +84,13 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         }
     }
 
+    func restart() {
+        guard let filter = lastFilter else { return }
+        restartAttempts = 0
+        restartWorkItem?.cancel()
+        restartStream(with: filter)
+    }
+
     func contentSharingPicker(
         _ picker: SCContentSharingPicker,
         didUpdateWith filter: SCContentFilter,
@@ -82,6 +98,13 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
     ) {
         guard isAcceptingCallbacks else { return }
         trace("picker didUpdate: microphoneEnabled=\(filter.isMicrophoneEnabled)")
+        lastFilter = filter
+        restartAttempts = 0
+        restartStream(with: filter)
+    }
+
+    private func restartStream(with filter: SCContentFilter) {
+        guard isAcceptingCallbacks else { return }
         self.stream?.stopCapture()
         self.stream = nil
 
@@ -120,9 +143,10 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
             if let error {
                 self?.logger.error("SCStream start failed: \(error.localizedDescription, privacy: .public)")
                 self?.trace("SCStream start failed: \(error.localizedDescription)")
-                self?.onFailure?("System audio capture failed: \(error.localizedDescription)")
+                self?.scheduleRestart(reason: error.localizedDescription)
             } else {
                 self?.trace("SCStream start completed")
+                self?.onStarted?()
             }
         }
     }
@@ -184,7 +208,25 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {
         guard isAcceptingCallbacks else { return }
-        onFailure?("System audio sharing stopped: \(error.localizedDescription)")
+        trace("SCStream stopped: \(error.localizedDescription)")
+        scheduleRestart(reason: error.localizedDescription)
+    }
+
+    private func scheduleRestart(reason: String) {
+        guard let filter = lastFilter, restartAttempts < 5 else {
+            onFailure?("System audio sharing stopped: \(reason)")
+            return
+        }
+        restartAttempts += 1
+        let delay = min(2.0, 0.25 * Double(restartAttempts))
+        restartWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.isAcceptingCallbacks else { return }
+            self.trace("retrying SCStream (attempt \(self.restartAttempts))")
+            self.restartStream(with: filter)
+        }
+        restartWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
     private func samples(from sampleBuffer: CMSampleBuffer, resampler: TTCustomStreamingResampler) -> [Int16]? {
@@ -230,12 +272,17 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
         let isFloat = streamDescription.map {
             ($0.mFormatFlags & kAudioFormatFlagIsFloat) != 0
         } ?? false
+        let isNonInterleaved = streamDescription.map {
+            ($0.mFormatFlags & kAudioFormatFlagIsNonInterleaved) != 0
+        } ?? false
         let bitsPerSample = Int(streamDescription?.mBitsPerChannel ?? 16)
         let bytesPerSample = max(1, bitsPerSample / 8)
         let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
         guard !buffers.isEmpty else { return nil }
         let availableFrames = min(sampleCount, buffers.reduce(sampleCount) { current, buffer in
-            min(current, Int(buffer.mDataByteSize) / max(1, bytesPerSample * Int(buffer.mNumberChannels)))
+            let channels = max(1, Int(buffer.mNumberChannels))
+            let bytesPerFrame = isNonInterleaved ? bytesPerSample : bytesPerSample * channels
+            return min(current, Int(buffer.mDataByteSize) / max(1, bytesPerFrame))
         })
         guard availableFrames > 0 else { return nil }
 
@@ -260,10 +307,13 @@ final class TTCustomSystemAudioCapture: NSObject, SCContentSharingPickerObserver
             for buffer in buffers {
                 guard let data = buffer.mData else { continue }
                 let channels = max(1, Int(buffer.mNumberChannels))
-                let frameStride = bytesPerSample * channels
+                let frameStride = isNonInterleaved ? bytesPerSample : bytesPerSample * channels
                 let frameAddress = data.advanced(by: frame * frameStride)
                 for channel in 0..<channels {
-                    sum += normalizedSample(at: frameAddress.advanced(by: channel * bytesPerSample))
+                    let address = isNonInterleaved
+                        ? frameAddress
+                        : frameAddress.advanced(by: channel * bytesPerSample)
+                    sum += normalizedSample(at: address)
                     channelCount += 1
                 }
             }

@@ -77,9 +77,12 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required to transmit your voice during conversations.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Screen capture is used to share audio from other apps with your conversation.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>screen-capture</string>
 		<string>voip</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

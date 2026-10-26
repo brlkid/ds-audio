@@ -1,5 +1,7 @@
 import Foundation
 
+/// Converts capture buffers to the 48 kHz mono format used by the LiveKit
+/// injection path while preserving fractional sample position between blocks.
 final class TTCustomStreamingResampler {
     private var sourceRate = 48_000.0
     private var sourcePosition = 0.0
